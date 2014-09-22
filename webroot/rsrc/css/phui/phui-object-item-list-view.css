@@ -399,6 +399,50 @@
   border-left-color: #333333;
 }
 
+.phui-object-item-bar-color-red-0 {
+  border-left-color: #d52b29;
+}
+
+.phui-object-item-bar-color-red-3 {
+  border-left-color: #de5553;
+}
+
+.phui-object-item-bar-color-red-6 {
+  border-left-color: #e67f7e;
+}
+
+.phui-object-item-bar-color-green+6 {
+  border-left-color: #168c2a;
+}
+
+.phui-object-item-bar-color-green+3 {
+  border-left-color: #1cb838;
+}
+
+.phui-object-item-bar-color-green-0 {
+  border-left-color: #29de49;
+}
+
+.phui-object-item-bar-color-green-3 {
+  border-left-color: #55e56f;
+}
+
+.phui-object-item-bar-color-green-6 {
+  border-left-color: #81ec94;
+}
+
+.phui-object-item-bar-color-blue-6 {
+  border-left-color: #6cc8f8;
+}
+
+.phui-object-item-bar-color-blue-3 {
+  border-left-color: #3cb6f5;
+}
+
+.phui-object-item-bar-color-blue-0 {
+  border-left-color: #0ca3f2;
+}
+
 /* - Disabled ------------------------------------------------------------------
 
   Disabled/inactive objects.
