@@ -46,7 +46,7 @@ final class PhabricatorFile extends PhabricatorFileDAO
 
   protected $ttl;
   protected $isExplicitUpload = 1;
-  protected $viewPolicy = PhabricatorPolicies::POLICY_USER;
+  protected $viewPolicy = PhabricatorPolicies::POLICY_PUBLIC;
 
   private $objects = self::ATTACHABLE;
   private $objectPHIDs = self::ATTACHABLE;
