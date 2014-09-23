@@ -399,48 +399,48 @@
   border-left-color: #333333;
 }
 
-.phui-object-item-bar-color-red-0 {
-  border-left-color: #d52b29;
+.phui-object-item-bar-color-redC {
+  border-left-color: #FF1E1B;
 }
 
-.phui-object-item-bar-color-red-3 {
-  border-left-color: #de5553;
+.phui-object-item-bar-color-redM4 {
+  border-left-color: #ff615f;
 }
 
-.phui-object-item-bar-color-red-6 {
-  border-left-color: #e67f7e;
+.phui-object-item-bar-color-redM8 {
+  border-left-color: #ffa4a3;
 }
 
-.phui-object-item-bar-color-green+6 {
-  border-left-color: #168c2a;
+.phui-object-item-bar-color-greenP8 {
+  border-left-color: #127c24;
 }
 
-.phui-object-item-bar-color-green+3 {
-  border-left-color: #1cb838;
+.phui-object-item-bar-color-greenP4 {
+  border-left-color: #1ab835;
 }
 
-.phui-object-item-bar-color-green-0 {
-  border-left-color: #29de49;
+.phui-object-item-bar-color-greenC {
+  border-left-color: #34e252;
 }
 
-.phui-object-item-bar-color-green-3 {
-  border-left-color: #55e56f;
+.phui-object-item-bar-color-greenM4 {
+  border-left-color: #8def9e;
 }
 
-.phui-object-item-bar-color-green-6 {
-  border-left-color: #81ec94;
+.phui-object-item-bar-color-greenM8 {
+  border-left-color: #baf5c4;
 }
 
-.phui-object-item-bar-color-blue-6 {
-  border-left-color: #6cc8f8;
-}
-
-.phui-object-item-bar-color-blue-3 {
-  border-left-color: #3cb6f5;
-}
-
-.phui-object-item-bar-color-blue-0 {
+.phui-object-item-bar-color-blueC {
   border-left-color: #0ca3f2;
+}
+
+.phui-object-item-bar-color-blueM4 {
+  border-left-color: #4cbcf6;
+}
+
+.phui-object-item-bar-color-blueM8 {
+  border-left-color: #8dd4f9;
 }
 
 /* - Disabled ------------------------------------------------------------------
