@@ -28,3 +28,6 @@
 
 # User extensions
 /src/extensions/*
+
+# Project files
+.idea/
