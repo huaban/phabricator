@@ -48,9 +48,34 @@ final class ProjectBoardTaskCard {
     $color_map = ManiphestTaskPriority::getColorMap();
     $bar_color = idx($color_map, $task->getPriority(), 'grey');
 
+    $field_list = PhabricatorCustomField::getObjectFields(
+      $task,
+      PhabricatorCustomField::ROLE_EDIT);
+    $field_list->setViewer($this->getViewer());
+    $field_list->readFieldsFromStorage($task);
+
+    $aux_fields = $field_list->getFields();
+    $tracks = array('0' => 'Task',
+      '1' => 'Feature',
+      '2' => 'Bug',
+      '3' => 'UI',
+      '4' => 'Improve'
+    );
+    $track = $tracks[$aux_fields['std:maniphest:huaban:track']->getValueForStorage()];
+    $estimated_story_points = $aux_fields['std:maniphest:huaban:estimated-story-points']->getValueForStorage();
+    $sub_head = '';
+    if ($track != '') {
+      $sub_head = $track;
+    }
+    if ($estimated_story_points != '') {
+      $sub_head = $sub_head != '' ? $sub_head . ' · ' . $estimated_story_points : $estimated_story_points;
+      $sub_head = $sub_head . ' Points';
+    }
+
     $card = id(new PHUIObjectItemView())
       ->setObjectName('T'.$task->getID())
       ->setHeader($task->getTitle())
+      ->setSubHead($sub_head)
       ->setGrippable($can_edit)
       ->setHref('/T'.$task->getID())
       ->addSigil('project-card')
@@ -61,10 +86,10 @@ final class ProjectBoardTaskCard {
         ))
       ->addAction(
         id(new PHUIListItemView())
-        ->setName(pht('Edit'))
-        ->setIcon('fa-pencil')
-        ->addSigil('edit-project-card')
-        ->setHref('/maniphest/task/edit/'.$task->getID().'/'))
+          ->setName(pht('Edit'))
+          ->setIcon('fa-pencil')
+          ->addSigil('edit-project-card')
+          ->setHref('/maniphest/task/edit/'.$task->getID().'/'))
       ->setBarColor($bar_color);
 
     if ($owner) {
