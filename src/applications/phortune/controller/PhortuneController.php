@@ -3,79 +3,35 @@
 abstract class PhortuneController extends PhabricatorController {
 
   protected function loadActiveAccount(PhabricatorUser $user) {
-    $accounts = id(new PhortuneAccountQuery())
-      ->setViewer($user)
-      ->withMemberPHIDs(array($user->getPHID()))
-      ->execute();
-
-    if (!$accounts) {
-      return $this->createUserAccount($user);
-    } else if (count($accounts) == 1) {
-      return head($accounts);
-    } else {
-      throw new Exception('TODO: No account selection yet.');
-    }
-  }
-
-  protected function createUserAccount(PhabricatorUser $user) {
-    $request = $this->getRequest();
-
-    $xactions = array();
-    $xactions[] = id(new PhortuneAccountTransaction())
-      ->setTransactionType(PhortuneAccountTransaction::TYPE_NAME)
-      ->setNewValue(pht('Account (%s)', $user->getUserName()));
-
-    $xactions[] = id(new PhortuneAccountTransaction())
-      ->setTransactionType(PhabricatorTransactions::TYPE_EDGE)
-      ->setMetadataValue(
-        'edge:type',
-        PhabricatorEdgeConfig::TYPE_ACCOUNT_HAS_MEMBER)
-      ->setNewValue(
-        array(
-          '=' => array($user->getPHID() => $user->getPHID()),
-        ));
-
-    $account = id(new PhortuneAccount())
-      ->attachMemberPHIDs(array());
-
-    $editor = id(new PhortuneAccountEditor())
-      ->setActor($user)
-      ->setContentSourceFromRequest($request);
-
-    // We create an account for you the first time you visit Phortune.
-    $unguarded = AphrontWriteGuard::beginScopedUnguardedWrites();
-
-      $editor->applyTransactions($account, $xactions);
-
-    unset($unguarded);
-
-    return $account;
+    return PhortuneAccountQuery::loadActiveAccountForUser(
+      $user,
+      PhabricatorContentSource::newFromRequest($this->getRequest()));
   }
 
   protected function buildChargesTable(array $charges, $show_cart = true) {
     $request = $this->getRequest();
     $viewer = $request->getUser();
 
+    $phids = array();
+    foreach ($charges as $charge) {
+      $phids[] = $charge->getProviderPHID();
+      $phids[] = $charge->getCartPHID();
+      $phids[] = $charge->getMerchantPHID();
+      $phids[] = $charge->getPaymentMethodPHID();
+    }
+
+    $handles = $this->loadViewerHandles($phids);
+
     $rows = array();
     foreach ($charges as $charge) {
-      $cart = $charge->getCart();
-      $cart_id = $cart->getID();
-      $cart_uri = $this->getApplicationURI("cart/{$cart_id}/");
-      $cart_href = phutil_tag(
-        'a',
-        array(
-          'href' => $cart_uri,
-        ),
-        pht('Cart %d', $cart_id));
-
       $rows[] = array(
         $charge->getID(),
-        $cart_href,
-        $charge->getPaymentProviderKey(),
-        $charge->getPaymentMethodPHID(),
-        PhortuneCurrency::newFromUSDCents($charge->getAmountInCents())
-          ->formatForDisplay(),
-        $charge->getStatus(),
+        $handles[$charge->getCartPHID()]->renderLink(),
+        $handles[$charge->getProviderPHID()]->renderLink(),
+        $handles[$charge->getPaymentMethodPHID()]->renderLink(),
+        $handles[$charge->getMerchantPHID()]->renderLink(),
+        $charge->getAmountAsCurrency()->formatForDisplay(),
+        PhortuneCharge::getNameForStatus($charge->getStatus()),
         phabricator_datetime($charge->getDateCreated(), $viewer),
       );
     }
@@ -87,6 +43,7 @@ abstract class PhortuneController extends PhabricatorController {
           pht('Cart'),
           pht('Provider'),
           pht('Method'),
+          pht('Merchant'),
           pht('Amount'),
           pht('Status'),
           pht('Created'),
@@ -94,7 +51,8 @@ abstract class PhortuneController extends PhabricatorController {
       ->setColumnClasses(
         array(
           '',
-          'strong',
+          '',
+          '',
           '',
           '',
           'wide right',
@@ -129,6 +87,52 @@ abstract class PhortuneController extends PhabricatorController {
     } else {
       $crumbs->addTextCrumb($name);
     }
+  }
+
+  private function loadEnabledProvidersForMerchant(PhortuneMerchant $merchant) {
+    $viewer = $this->getRequest()->getUser();
+
+    $provider_configs = id(new PhortunePaymentProviderConfigQuery())
+      ->setViewer($viewer)
+      ->withMerchantPHIDs(array($merchant->getPHID()))
+      ->execute();
+    $providers = mpull($provider_configs, 'buildProvider', 'getID');
+
+    foreach ($providers as $key => $provider) {
+      if (!$provider->isEnabled()) {
+        unset($providers[$key]);
+      }
+    }
+
+    return $providers;
+  }
+
+  protected function loadCreatePaymentMethodProvidersForMerchant(
+    PhortuneMerchant $merchant) {
+
+    $providers = $this->loadEnabledProvidersForMerchant($merchant);
+    foreach ($providers as $key => $provider) {
+      if (!$provider->canCreatePaymentMethods()) {
+        unset($providers[$key]);
+        continue;
+      }
+    }
+
+    return $providers;
+  }
+
+  protected function loadOneTimePaymentProvidersForMerchant(
+    PhortuneMerchant $merchant) {
+
+    $providers = $this->loadEnabledProvidersForMerchant($merchant);
+    foreach ($providers as $key => $provider) {
+      if (!$provider->canProcessOneTimePayments()) {
+        unset($providers[$key]);
+        continue;
+      }
+    }
+
+    return $providers;
   }
 
 }

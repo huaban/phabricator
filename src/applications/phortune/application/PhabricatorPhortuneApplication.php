@@ -58,11 +58,25 @@ final class PhabricatorPhortuneApplication extends PhabricatorApplication {
           'view/(?P<id>\d+)/' => 'PhortuneProductViewController',
           'edit/(?:(?P<id>\d+)/)?' => 'PhortuneProductEditController',
         ),
-        'purchase/(?P<id>\d+)/' => array(
-          '' => 'PhortunePurchaseViewController',
+        'provider/' => array(
+          'edit/(?:(?P<id>\d+)/)?' => 'PhortuneProviderEditController',
+          '(?P<id>\d+)/(?P<action>[^/]+)/'
+            => 'PhortuneProviderActionController',
         ),
-        'provider/(?P<digest>[^/]+)/(?P<action>[^/]+)/'
-          => 'PhortuneProviderController',
+        'merchant/' => array(
+          '(?:query/(?P<queryKey>[^/]+)/)?' => 'PhortuneMerchantListController',
+          'edit/(?:(?P<id>\d+)/)?' => 'PhortuneMerchantEditController',
+          '(?P<id>\d+)/' => 'PhortuneMerchantViewController',
+        ),
+      ),
+    );
+  }
+
+  protected function getCustomCapabilities() {
+    return array(
+      PhortuneMerchantCapability::CAPABILITY => array(
+        'caption' => pht('Merchant accounts can receive payments.'),
+        'default' => PhabricatorPolicies::POLICY_ADMIN,
       ),
     );
   }

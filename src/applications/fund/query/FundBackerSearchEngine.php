@@ -35,6 +35,8 @@ final class FundBackerSearchEngine
   public function buildQueryFromSavedQuery(PhabricatorSavedQuery $saved) {
     $query = id(new FundBackerQuery());
 
+    $query->withStatuses(array(FundBacker::STATUS_PURCHASED));
+
     if ($this->getInitiative()) {
       $query->withInitiativePHIDs(
         array(
@@ -124,30 +126,35 @@ final class FundBackerSearchEngine
 
     $viewer = $this->requireViewer();
 
-    $list = id(new PHUIObjectItemListView());
+    $rows = array();
     foreach ($backers as $backer) {
-      $backer_handle = $handles[$backer->getBackerPHID()];
-
-      $currency = PhortuneCurrency::newFromUSDCents(
-        $backer->getAmountInCents());
-
-      $header = pht(
-        '%s for %s',
-        $currency->formatForDisplay(),
-        $handles[$backer->getInitiativePHID()]->renderLink());
-
-      $item = id(new PHUIObjectItemView())
-        ->setHeader($header)
-        ->addIcon(
-          'none',
-          phabricator_datetime($backer->getDateCreated(), $viewer))
-        ->addByline(pht('Backer: %s', $backer_handle->renderLink()));
-
-      $list->addItem($item);
+      $rows[] = array(
+        $handles[$backer->getInitiativePHID()]->renderLink(),
+        $handles[$backer->getBackerPHID()]->renderLink(),
+        $backer->getAmountAsCurrency()->formatForDisplay(),
+        phabricator_datetime($backer->getDateCreated(), $viewer),
+      );
     }
 
+    $table = id(new AphrontTableView($rows))
+      ->setHeaders(
+        array(
+          pht('Initiative'),
+          pht('Backer'),
+          pht('Amount'),
+          pht('Date'),
+        ))
+      ->setColumnClasses(
+        array(
+          null,
+          null,
+          'wide right',
+          'right',
+        ));
 
-    return $list;
+    return id(new PHUIObjectBoxView())
+      ->setHeaderText(pht('Backers'))
+      ->appendChild($table);
   }
 
 }

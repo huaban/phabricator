@@ -48,7 +48,11 @@ final class FundInitiativeEditController
     $e_name = true;
     $v_name = $initiative->getName();
 
+    $e_merchant = null;
+    $v_merchant = $initiative->getMerchantPHID();
+
     $v_desc = $initiative->getDescription();
+    $v_risk = $initiative->getRisks();
 
     if ($is_new) {
       $v_projects = array();
@@ -63,12 +67,16 @@ final class FundInitiativeEditController
     if ($request->isFormPost()) {
       $v_name = $request->getStr('name');
       $v_desc = $request->getStr('description');
+      $v_risk = $request->getStr('risks');
       $v_view = $request->getStr('viewPolicy');
       $v_edit = $request->getStr('editPolicy');
+      $v_merchant = $request->getStr('merchantPHID');
       $v_projects = $request->getArr('projects');
 
       $type_name = FundInitiativeTransaction::TYPE_NAME;
       $type_desc = FundInitiativeTransaction::TYPE_DESCRIPTION;
+      $type_risk = FundInitiativeTransaction::TYPE_RISKS;
+      $type_merchant = FundInitiativeTransaction::TYPE_MERCHANT;
       $type_view = PhabricatorTransactions::TYPE_VIEW_POLICY;
       $type_edit = PhabricatorTransactions::TYPE_EDIT_POLICY;
 
@@ -81,6 +89,14 @@ final class FundInitiativeEditController
       $xactions[] = id(new FundInitiativeTransaction())
         ->setTransactionType($type_desc)
         ->setNewValue($v_desc);
+
+      $xactions[] = id(new FundInitiativeTransaction())
+        ->setTransactionType($type_risk)
+        ->setNewValue($v_risk);
+
+      $xactions[] = id(new FundInitiativeTransaction())
+        ->setTransactionType($type_merchant)
+        ->setNewValue($v_merchant);
 
       $xactions[] = id(new FundInitiativeTransaction())
         ->setTransactionType($type_view)
@@ -110,6 +126,7 @@ final class FundInitiativeEditController
         $validation_exception = $ex;
 
         $e_name = $ex->getShortMessage($type_name);
+        $e_merchant = $ex->getShortMessage($type_merchant);
 
         $initiative->setViewPolicy($v_view);
         $initiative->setEditPolicy($v_edit);
@@ -127,6 +144,45 @@ final class FundInitiativeEditController
       $project_handles = array();
     }
 
+    $merchants = id(new PhortuneMerchantQuery())
+      ->setViewer($viewer)
+      ->requireCapabilities(
+        array(
+          PhabricatorPolicyCapability::CAN_VIEW,
+          PhabricatorPolicyCapability::CAN_EDIT,
+        ))
+      ->execute();
+
+    $merchant_options = array();
+    foreach ($merchants as $merchant) {
+      $merchant_options[$merchant->getPHID()] = pht(
+        'Merchant %d %s',
+        $merchant->getID(),
+        $merchant->getName());
+    }
+
+    if ($v_merchant && empty($merchant_options[$v_merchant])) {
+      $merchant_options = array(
+        $v_merchant => pht('(Restricted Merchant)'),
+      ) + $merchant_options;
+    }
+
+    if (!$merchant_options) {
+      return $this->newDialog()
+        ->setTitle(pht('No Valid Phortune Merchant Accounts'))
+        ->appendParagraph(
+          pht(
+            'You do not control any merchant accounts which can receive '.
+            'payments from this initiative. When you create an initiative, '.
+            'you need to specify a merchant account where funds will be paid '.
+            'to.'))
+        ->appendParagraph(
+          pht(
+            'Create a merchant account in the Phortune application before '.
+            'creating an initiative in Fund.'))
+        ->addCancelButton($this->getApplicationURI());
+    }
+
     $form = id(new AphrontFormView())
       ->setUser($viewer)
       ->appendChild(
@@ -136,10 +192,22 @@ final class FundInitiativeEditController
           ->setValue($v_name)
           ->setError($e_name))
       ->appendChild(
+        id(new AphrontFormSelectControl())
+          ->setName('merchantPHID')
+          ->setLabel(pht('Pay To Merchant'))
+          ->setValue($v_merchant)
+          ->setError($e_merchant)
+          ->setOptions($merchant_options))
+      ->appendChild(
         id(new PhabricatorRemarkupControl())
           ->setName('description')
           ->setLabel(pht('Description'))
           ->setValue($v_desc))
+      ->appendChild(
+        id(new PhabricatorRemarkupControl())
+          ->setName('risks')
+          ->setLabel(pht('Risks/Challenges'))
+          ->setValue($v_risk))
       ->appendChild(
         id(new AphrontFormTokenizerControl())
           ->setLabel(pht('Projects'))

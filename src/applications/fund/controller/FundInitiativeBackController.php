@@ -21,6 +21,14 @@ final class FundInitiativeBackController
       return new Aphront404Response();
     }
 
+    $merchant = id(new PhortuneMerchantQuery())
+      ->setViewer($viewer)
+      ->withPHIDs(array($initiative->getMerchantPHID()))
+      ->executeOne();
+    if (!$merchant) {
+      return new Aphront404Response();
+    }
+
     $initiative_uri = '/'.$initiative->getMonogram();
 
     if ($initiative->isClosed()) {
@@ -47,6 +55,7 @@ final class FundInitiativeBackController
           $currency = PhortuneCurrency::newFromUserInput(
             $viewer,
             $v_amount);
+          $currency->assertInRange('1.00 USD', null);
         } catch (Exception $ex) {
           $errors[] = $ex->getMessage();
           $e_amount = pht('Invalid');
@@ -57,10 +66,28 @@ final class FundInitiativeBackController
         $backer = FundBacker::initializeNewBacker($viewer)
           ->setInitiativePHID($initiative->getPHID())
           ->attachInitiative($initiative)
-          ->setAmountInCents($currency->getValue())
+          ->setAmountAsCurrency($currency)
           ->save();
 
-        // TODO: Here, we'd create a purchase and cart.
+        $product = id(new PhortuneProductQuery())
+          ->setViewer($viewer)
+          ->withClassAndRef('FundBackerProduct', $initiative->getPHID())
+          ->executeOne();
+
+        $account = PhortuneAccountQuery::loadActiveAccountForUser(
+          $viewer,
+          PhabricatorContentSource::newFromRequest($request));
+
+        $cart_implementation = id(new FundBackerCart())
+          ->setInitiative($initiative);
+
+        $cart = $account->newCart($viewer, $cart_implementation, $merchant);
+
+        $purchase = $cart->newPurchase($viewer, $product);
+        $purchase
+          ->setBasePriceAsCurrency($currency)
+          ->setMetadataValue('backerPHID', $backer->getPHID())
+          ->save();
 
         $xactions = array();
 
@@ -74,9 +101,10 @@ final class FundInitiativeBackController
 
         $editor->applyTransactions($backer, $xactions);
 
-        // TODO: Here, we'd ship the user into Phortune.
+        $cart->activateCart();
 
-        return id(new AphrontRedirectResponse())->setURI($initiative_uri);
+        return id(new AphrontRedirectResponse())
+          ->setURI($cart->getCheckoutURI());
       }
     }
 
@@ -90,7 +118,8 @@ final class FundInitiativeBackController
           ->setError($e_amount));
 
     return $this->newDialog()
-      ->setTitle(pht('Back Initiative'))
+      ->setTitle(
+        pht('Back %s %s', $initiative->getMonogram(), $initiative->getName()))
       ->setErrors($errors)
       ->appendChild($form->buildLayoutView())
       ->addCancelButton($initiative_uri)

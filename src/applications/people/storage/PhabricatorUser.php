@@ -113,6 +113,44 @@ final class PhabricatorUser
   public function getConfiguration() {
     return array(
       self::CONFIG_AUX_PHID => true,
+      self::CONFIG_COLUMN_SCHEMA => array(
+        'userName' => 'text64',
+        'realName' => 'text128',
+        'sex' => 'text4?',
+        'translation' => 'text64?',
+        'passwordSalt' => 'text32?',
+        'passwordHash' => 'text128?',
+        'profileImagePHID' => 'phid?',
+        'consoleEnabled' => 'bool',
+        'consoleVisible' => 'bool',
+        'consoleTab' => 'text64',
+        'conduitCertificate' => 'text255',
+        'isSystemAgent' => 'bool',
+        'isDisabled' => 'bool',
+        'isAdmin' => 'bool',
+        'timezoneIdentifier' => 'text255',
+        'isEmailVerified' => 'uint32',
+        'isApproved' => 'uint32',
+        'accountSecret' => 'bytes64',
+        'isEnrolledInMultiFactor' => 'bool',
+      ),
+      self::CONFIG_KEY_SCHEMA => array(
+        'key_phid' => null,
+        'phid' => array(
+          'columns' => array('phid'),
+          'unique' => true,
+        ),
+        'userName' => array(
+          'columns' => array('userName'),
+          'unique' => true,
+        ),
+        'realName' => array(
+          'columns' => array('realName'),
+        ),
+        'key_approved' => array(
+          'columns' => array('isApproved'),
+        ),
+      ),
     ) + parent::getConfiguration();
   }
 
@@ -407,7 +445,8 @@ final class PhabricatorUser
         PhabricatorUserPreferences::PREFERENCE_TITLES => 'glyph',
         PhabricatorUserPreferences::PREFERENCE_EDITOR => '',
         PhabricatorUserPreferences::PREFERENCE_MONOSPACED => '',
-        PhabricatorUserPreferences::PREFERENCE_DARK_CONSOLE => 0);
+        PhabricatorUserPreferences::PREFERENCE_DARK_CONSOLE => 0,
+      );
 
       $preferences->setPreferences($default_dict);
     }

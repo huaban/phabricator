@@ -5,7 +5,10 @@ final class FundInitiativeTransaction
 
   const TYPE_NAME = 'fund:name';
   const TYPE_DESCRIPTION = 'fund:description';
+  const TYPE_RISKS = 'fund:risks';
   const TYPE_STATUS = 'fund:status';
+  const TYPE_BACKER = 'fund:backer';
+  const TYPE_MERCHANT = 'fund:merchant';
 
   public function getApplicationName() {
     return 'fund';
@@ -17,6 +20,27 @@ final class FundInitiativeTransaction
 
   public function getApplicationTransactionCommentObject() {
     return null;
+  }
+
+  public function getRequiredHandlePHIDs() {
+    $phids = parent::getRequiredHandlePHIDs();
+
+    $old = $this->getOldValue();
+    $new = $this->getNewValue();
+
+    $type = $this->getTransactionType();
+    switch ($type) {
+      case FundInitiativeTransaction::TYPE_MERCHANT:
+        if ($old) {
+          $phids[] = $old;
+        }
+        if ($new) {
+          $phids[] = $new;
+        }
+        break;
+    }
+
+    return $phids;
   }
 
   public function getTitle() {
@@ -41,6 +65,10 @@ final class FundInitiativeTransaction
             $new);
         }
         break;
+      case FundInitiativeTransaction::TYPE_RISKS:
+        return pht(
+          '%s edited the risks for this initiative.',
+          $this->renderHandleLink($author_phid));
       case FundInitiativeTransaction::TYPE_DESCRIPTION:
         return pht(
           '%s edited the description of this initiative.',
@@ -57,6 +85,24 @@ final class FundInitiativeTransaction
               $this->renderHandleLink($author_phid));
         }
         break;
+      case FundInitiativeTransaction::TYPE_BACKER:
+        return pht(
+          '%s backed this initiative.',
+          $this->renderHandleLink($author_phid));
+      case FundInitiativeTransaction::TYPE_MERCHANT:
+        if ($old === null) {
+          return pht(
+            '%s set this initiative to pay to %s.',
+            $this->renderHandleLink($author_phid),
+            $this->renderHandleLink($new));
+        } else {
+          return pht(
+            '%s changed the merchant receiving funds from this '.
+            'initiative from %s to %s.',
+            $this->renderHandleLink($author_phid),
+            $this->renderHandleLink($old),
+            $this->renderHandleLink($new));
+        }
     }
 
     return parent::getTitle();
@@ -104,6 +150,11 @@ final class FundInitiativeTransaction
               $this->renderHandleLink($object_phid));
         }
         break;
+      case FundInitiativeTransaction::TYPE_BACKER:
+        return pht(
+          '%s backed %s.',
+          $this->renderHandleLink($author_phid),
+          $this->renderHandleLink($object_phid));
     }
 
     return parent::getTitleForFeed($story);
@@ -113,6 +164,7 @@ final class FundInitiativeTransaction
     $old = $this->getOldValue();
     switch ($this->getTransactionType()) {
       case FundInitiativeTransaction::TYPE_DESCRIPTION:
+      case FundInitiativeTransaction::TYPE_RISKS:
         return ($old === null);
     }
     return parent::shouldHide();
@@ -121,6 +173,7 @@ final class FundInitiativeTransaction
   public function hasChangeDetails() {
     switch ($this->getTransactionType()) {
       case FundInitiativeTransaction::TYPE_DESCRIPTION:
+      case FundInitiativeTransaction::TYPE_RISKS:
         return ($this->getOldValue() !== null);
     }
 

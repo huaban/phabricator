@@ -9,8 +9,6 @@
 final class PhortuneCharge extends PhortuneDAO
   implements PhabricatorPolicyInterface {
 
-  const STATUS_PENDING    = 'charge:pending';
-  const STATUS_AUTHORIZED = 'charge:authorized';
   const STATUS_CHARGING   = 'charge:charging';
   const STATUS_CHARGED    = 'charge:charged';
   const STATUS_FAILED     = 'charge:failed';
@@ -18,14 +16,20 @@ final class PhortuneCharge extends PhortuneDAO
   protected $accountPHID;
   protected $authorPHID;
   protected $cartPHID;
-  protected $paymentProviderKey;
+  protected $providerPHID;
+  protected $merchantPHID;
   protected $paymentMethodPHID;
-  protected $amountInCents;
+  protected $amountAsCurrency;
   protected $status;
   protected $metadata = array();
 
   private $account = self::ATTACHABLE;
   private $cart = self::ATTACHABLE;
+
+  public static function initializeNewCharge() {
+    return id(new PhortuneCharge())
+      ->setStatus(self::STATUS_CHARGING);
+  }
 
   public function getConfiguration() {
     return array(
@@ -33,17 +37,47 @@ final class PhortuneCharge extends PhortuneDAO
       self::CONFIG_SERIALIZATION => array(
         'metadata' => self::SERIALIZATION_JSON,
       ),
+      self::CONFIG_APPLICATION_SERIALIZERS => array(
+        'amountAsCurrency' => new PhortuneCurrencySerializer(),
+      ),
+      self::CONFIG_COLUMN_SCHEMA => array(
+        'paymentProviderKey' => 'text128',
+        'paymentMethodPHID' => 'phid?',
+        'amountAsCurrency' => 'text64',
+        'status' => 'text32',
+      ),
+      self::CONFIG_KEY_SCHEMA => array(
+        'key_cart' => array(
+          'columns' => array('cartPHID'),
+        ),
+        'key_account' => array(
+          'columns' => array('accountPHID'),
+        ),
+        'key_merchant' => array(
+          'columns' => array('merchantPHID'),
+        ),
+        'key_provider' => array(
+          'columns' => array('providerPHID'),
+        ),
+      ),
     ) + parent::getConfiguration();
+  }
+
+  public static function getStatusNameMap() {
+    return array(
+      self::STATUS_CHARGING => pht('Charging'),
+      self::STATUS_CHARGED => pht('Charged'),
+      self::STATUS_FAILED => pht('Failed'),
+    );
+  }
+
+  public static function getNameForStatus($status) {
+    return idx(self::getStatusNameMap(), $status, pht('Unknown'));
   }
 
   public function generatePHID() {
     return PhabricatorPHID::generateNewPHID(
-      PhabricatorPHIDConstants::PHID_TYPE_CHRG);
-  }
-
-  protected function didReadData() {
-    // The payment processing code is strict about types.
-    $this->amountInCents = (int)$this->amountInCents;
+      PhortuneChargePHIDType::TYPECONST);
   }
 
   public function getMetadataValue($key, $default = null) {

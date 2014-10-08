@@ -13,10 +13,13 @@ final class FundInitiative extends FundDAO
 
   protected $name;
   protected $ownerPHID;
+  protected $merchantPHID;
   protected $description;
+  protected $risks;
   protected $viewPolicy;
   protected $editPolicy;
   protected $status;
+  protected $totalAsCurrency;
 
   private $projectPHIDs = self::ATTACHABLE;
 
@@ -42,7 +45,8 @@ final class FundInitiative extends FundDAO
       ->setOwnerPHID($actor->getPHID())
       ->setViewPolicy($view_policy)
       ->setEditPolicy($actor->getPHID())
-      ->setStatus(self::STATUS_OPEN);
+      ->setStatus(self::STATUS_OPEN)
+      ->setTotalAsCurrency(PhortuneCurrency::newEmptyCurrency());
   }
 
   public function getConfiguration() {
@@ -51,7 +55,21 @@ final class FundInitiative extends FundDAO
       self::CONFIG_COLUMN_SCHEMA => array(
         'name' => 'text255',
         'description' => 'text',
+        'risks' => 'text',
         'status' => 'text32',
+        'merchantPHID' => 'phid?',
+        'totalAsCurrency' => 'text64',
+      ),
+      self::CONFIG_APPLICATION_SERIALIZERS => array(
+        'totalAsCurrency' => new PhortuneCurrencySerializer(),
+      ),
+      self::CONFIG_KEY_SCHEMA => array(
+        'key_status' => array(
+          'columns' => array('status'),
+        ),
+        'key_owner' => array(
+          'columns' => array('ownerPHID'),
+        ),
       ),
     ) + parent::getConfiguration();
   }

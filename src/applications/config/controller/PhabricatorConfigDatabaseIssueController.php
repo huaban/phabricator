@@ -25,7 +25,8 @@ final class PhabricatorConfigDatabaseIssueController
           null,
           null,
           null,
-          $issue);
+          $issue,
+        );
       }
       foreach ($database->getTables() as $table_name => $table) {
         foreach ($table->getLocalIssues() as $issue) {
@@ -34,7 +35,8 @@ final class PhabricatorConfigDatabaseIssueController
             $table_name,
             null,
             null,
-            $issue);
+            $issue,
+          );
         }
         foreach ($table->getColumns() as $column_name => $column) {
           foreach ($column->getLocalIssues() as $issue) {
@@ -43,7 +45,8 @@ final class PhabricatorConfigDatabaseIssueController
               $table_name,
               'column',
               $column_name,
-              $issue);
+              $issue,
+            );
           }
         }
         foreach ($table->getKeys() as $key_name => $key) {
@@ -53,7 +56,8 @@ final class PhabricatorConfigDatabaseIssueController
               $table_name,
               'key',
               $key_name,
-              $issue);
+              $issue,
+            );
           }
         }
       }
@@ -89,10 +93,17 @@ final class PhabricatorConfigDatabaseIssueController
     foreach ($issues as $issue) {
       $const = $issue[4];
 
+      $database_link = phutil_tag(
+        'a',
+        array(
+          'href' => $this->getApplicationURI('/database/'.$issue[0].'/'),
+        ),
+        $issue[0]);
+
       $rows[] = array(
         $this->renderIcon(
           PhabricatorConfigStorageSchema::getIssueStatus($const)),
-        $issue[0],
+        $database_link,
         $issue[1],
         $issue[2],
         $issue[3],
@@ -138,14 +149,10 @@ final class PhabricatorConfigDatabaseIssueController
         new PhutilNumber($counts[PhabricatorConfigStorageSchema::STATUS_WARN]));
     }
 
-    if (isset($counts[PhabricatorConfigStorageSchema::STATUS_NOTE])) {
-      $errors[] = pht(
-        'Detected %s minor issue(s) with the scheamata.',
-        new PhutilNumber($counts[PhabricatorConfigStorageSchema::STATUS_NOTE]));
-    }
+    $title = pht('Database Issues');
 
     $table_box = id(new PHUIObjectBoxView())
-      ->setHeaderText(pht('Database Issues'))
+      ->setHeaderText($title)
       ->setFormErrors($errors)
       ->appendChild($table);
 
@@ -160,7 +167,7 @@ final class PhabricatorConfigDatabaseIssueController
     return $this->buildApplicationPage(
       $nav,
       array(
-        'title' => 'all',
+        'title' => $title,
       ));
   }
 

@@ -42,6 +42,34 @@ final class DifferentialDiff
   public function getConfiguration() {
     return array(
       self::CONFIG_AUX_PHID => true,
+      self::CONFIG_COLUMN_SCHEMA => array(
+        'revisionID' => 'id?',
+        'authorPHID' => 'phid?',
+        'repositoryPHID' => 'phid?',
+        'sourceMachine' => 'text255?',
+        'sourcePath' => 'text255?',
+        'sourceControlSystem' => 'text64?',
+        'sourceControlBaseRevision' => 'text255?',
+        'sourceControlPath' => 'text255?',
+        'lintStatus' => 'uint32',
+        'unitStatus' => 'uint32',
+        'lineCount' => 'uint32',
+        'branch' => 'text255?',
+        'bookmark' => 'text255?',
+        'arcanistProjectPHID' => 'phid?',
+        'repositoryUUID' => 'text64?',
+
+        // T6203/NULLABILITY
+        // These should be non-null; all diffs should have a creation method
+        // and the description should just be empty.
+        'creationMethod' => 'text255?',
+        'description' => 'text255?',
+      ),
+      self::CONFIG_KEY_SCHEMA => array(
+        'revisionID' => array(
+          'columns' => array('revisionID'),
+        ),
+      ),
     ) + parent::getConfiguration();
   }
 
@@ -201,7 +229,7 @@ final class DifferentialDiff
       'lintStatus' => $this->getLintStatus(),
       'changes' => array(),
       'properties' => array(),
-      'projectName' => $this->getArcanistProjectName()
+      'projectName' => $this->getArcanistProjectName(),
     );
 
     $dict['changes'] = $this->buildChangesList();

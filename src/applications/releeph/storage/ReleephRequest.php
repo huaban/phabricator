@@ -153,6 +153,32 @@ final class ReleephRequest extends ReleephDAO
         'details' => self::SERIALIZATION_JSON,
         'userIntents' => self::SERIALIZATION_JSON,
       ),
+      self::CONFIG_COLUMN_SCHEMA => array(
+        'requestCommitPHID' => 'phid?',
+        'commitIdentifier' => 'text40?',
+        'commitPHID' => 'phid?',
+        'pickStatus' => 'uint32?',
+        'inBranch' => 'bool',
+        'mailKey' => 'bytes20',
+        'userIntents' => 'text?',
+      ),
+      self::CONFIG_KEY_SCHEMA => array(
+        'key_phid' => null,
+        'phid' => array(
+          'columns' => array('phid'),
+          'unique' => true,
+        ),
+        'requestIdentifierBranch' => array(
+          'columns' => array('requestCommitPHID', 'branchID'),
+          'unique' => true,
+        ),
+        'branchID' => array(
+          'columns' => array('branchID'),
+        ),
+        'key_requestedObject' => array(
+          'columns' => array('requestedObjectPHID'),
+        ),
+      ),
     ) + parent::getConfiguration();
   }
 
