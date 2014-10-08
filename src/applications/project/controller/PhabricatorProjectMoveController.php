@@ -97,6 +97,7 @@ final class PhabricatorProjectMoveController
       $task_phids[] = $before_phid;
     }
 
+    /*
     if ($task_phids && ($order == PhabricatorProjectColumn::ORDER_PRIORITY)) {
       $tasks = id(new ManiphestTaskQuery())
         ->setViewer($viewer)
@@ -146,7 +147,7 @@ final class PhabricatorProjectMoveController
             'direction' => '<'));
       }
    }
-
+   */
     $editor = id(new ManiphestTransactionEditor())
       ->setActor($viewer)
       ->setContinueOnMissingFields(true)
