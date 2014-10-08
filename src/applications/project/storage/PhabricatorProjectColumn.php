@@ -9,7 +9,7 @@ final class PhabricatorProjectColumn
   const STATUS_ACTIVE = 0;
   const STATUS_HIDDEN = 1;
 
-  const DEFAULT_ORDER = 'natural';
+  const DEFAULT_ORDER = 'priority';
   const ORDER_NATURAL = 'natural';
   const ORDER_PRIORITY = 'priority';
 
