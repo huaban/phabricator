@@ -59,7 +59,8 @@ final class ProjectBoardTaskCard {
       '1' => 'Feature',
       '2' => 'Bug',
       '3' => 'UI',
-      '4' => 'Improve'
+      '4' => 'Improve',
+      '5' => 'Hotfix'
     );
     $track = $tracks[$aux_fields['std:maniphest:huaban:track']->getValueForStorage()];
     $estimated_story_points = $aux_fields['std:maniphest:huaban:estimated-story-points']->getValueForStorage();
