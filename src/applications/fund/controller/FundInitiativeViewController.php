@@ -5,6 +5,10 @@ final class FundInitiativeViewController
 
   private $id;
 
+  public function shouldAllowPublic() {
+    return true;
+  }
+
   public function willProcessRequest(array $data) {
     $this->id = $data['id'];
   }
@@ -63,7 +67,8 @@ final class FundInitiativeViewController
     $timeline = id(new PhabricatorApplicationTransactionView())
       ->setUser($viewer)
       ->setObjectPHID($initiative->getPHID())
-      ->setTransactions($xactions);
+      ->setTransactions($xactions)
+      ->setShouldTerminate(true);
 
     return $this->buildApplicationPage(
       array(
@@ -73,6 +78,7 @@ final class FundInitiativeViewController
       ),
       array(
         'title' => $title,
+        'pageObjects' => array($initiative->getPHID()),
       ));
   }
 

@@ -39,7 +39,10 @@ final class PhabricatorPhortuneApplication extends PhabricatorApplication {
           'card/' => array(
             'new/' => 'PhortunePaymentMethodCreateController',
           ),
-          'buy/(?P<productID>\d+)/' => 'PhortuneProductPurchaseController',
+          'order/(?:query/(?P<queryKey>[^/]+)/)?'
+            => 'PhortuneCartListController',
+          'charge/(?:query/(?P<queryKey>[^/]+)/)?'
+            => 'PhortuneChargeListController',
         ),
         'card/(?P<id>\d+)/' => array(
           'edit/' => 'PhortunePaymentMethodEditController',
@@ -48,6 +51,9 @@ final class PhabricatorPhortuneApplication extends PhabricatorApplication {
         'cart/(?P<id>\d+)/' => array(
           '' => 'PhortuneCartViewController',
           'checkout/' => 'PhortuneCartCheckoutController',
+          '(?P<action>cancel|refund)/' => 'PhortuneCartCancelController',
+          'update/' => 'PhortuneCartUpdateController',
+          'accept/' => 'PhortuneCartAcceptController',
         ),
         'account/' => array(
           '' => 'PhortuneAccountListController',
@@ -60,12 +66,15 @@ final class PhabricatorPhortuneApplication extends PhabricatorApplication {
         ),
         'provider/' => array(
           'edit/(?:(?P<id>\d+)/)?' => 'PhortuneProviderEditController',
+          'disable/(?P<id>\d+)/' => 'PhortuneProviderDisableController',
           '(?P<id>\d+)/(?P<action>[^/]+)/'
             => 'PhortuneProviderActionController',
         ),
         'merchant/' => array(
           '(?:query/(?P<queryKey>[^/]+)/)?' => 'PhortuneMerchantListController',
           'edit/(?:(?P<id>\d+)/)?' => 'PhortuneMerchantEditController',
+          'orders/(?P<merchantID>\d+)/(?:query/(?P<querKey>[^/]+)/)?'
+            => 'PhortuneCartListController',
           '(?P<id>\d+)/' => 'PhortuneMerchantViewController',
         ),
       ),

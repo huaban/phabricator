@@ -28,4 +28,11 @@ abstract class PhortuneProductImplementation {
     return;
   }
 
+  public function didRefundProduct(
+    PhortuneProduct $product,
+    PhortunePurchase $purchase,
+    PhortuneCurrency $amount) {
+    return;
+  }
+
 }
