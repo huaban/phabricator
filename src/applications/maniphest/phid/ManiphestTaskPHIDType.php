@@ -57,6 +57,9 @@ final class ManiphestTaskPHIDType extends PhabricatorPHIDType {
       $handle->setFullName("T{$id}: {$title} · {$estimated_story_points} Points");
       $handle->setURI("/T{$id}");
       switch ($track) {
+        case 'Feature':
+          $handle->setIcon('fa-leaf');
+          break;
         case 'Bug':
           $handle->setIcon('fa-bug');
           break;
