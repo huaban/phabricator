@@ -64,19 +64,31 @@ final class ProjectBoardTaskCard {
     );
     $track = $tracks[$aux_fields['std:maniphest:huaban:track']->getValueForStorage()];
     $estimated_story_points = $aux_fields['std:maniphest:huaban:estimated-story-points']->getValueForStorage();
-    $sub_head = '';
-    if ($track != '') {
-      $sub_head = $track;
-    }
-    if ($estimated_story_points != '') {
-      $sub_head = $sub_head != '' ? $sub_head . ' · ' . $estimated_story_points : $estimated_story_points;
-      $sub_head = $sub_head . ' Points';
+    switch ($track) {
+      case 'Feature':
+        $icon = 'fa-leaf';
+        break;
+      case 'Bug':
+        $icon = 'fa-bug';
+        break;
+      case 'UI':
+        $icon = 'fa-pain-brush';
+        break;
+      case 'Improve':
+        $icon = 'fa-arrow-circle-o-up';
+        break;
+      case 'Hotfix':
+        $icon = 'fa-bolt';
+        break;
+      default:
+        $icon = 'fa-tasks';
+        break;
     }
 
     $card = id(new PHUIObjectItemView())
       ->setObjectName('T'.$task->getID())
       ->setHeader($task->getTitle())
-      ->setSubHead($sub_head)
+      ->addIcon($icon . ' ' . $bar_color, pht($estimated_story_points))
       ->setGrippable($can_edit)
       ->setHref('/T'.$task->getID())
       ->addSigil('project-card')
