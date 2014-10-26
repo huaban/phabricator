@@ -34,9 +34,47 @@ final class ManiphestTaskPHIDType extends PhabricatorPHIDType {
       $id = $task->getID();
       $title = $task->getTitle();
 
+      $color_map = ManiphestTaskPriority::getColorMap();
+      $bar_color = idx($color_map, $task->getPriority(), 'grey');
+
+      $field_list = PhabricatorCustomField::getObjectFields(
+        $task,
+        PhabricatorCustomField::ROLE_EDIT);
+      $field_list->readFieldsFromStorage($task);
+
+      $aux_fields = $field_list->getFields();
+      $tracks = array('0' => 'Task',
+        '1' => 'Feature',
+        '2' => 'Bug',
+        '3' => 'UI',
+        '4' => 'Improve',
+        '5' => 'Hotfix'
+      );
+      $track = $tracks[$aux_fields['std:maniphest:huaban:track']->getValueForStorage()];
+      $estimated_story_points = $aux_fields['std:maniphest:huaban:estimated-story-points']->getValueForStorage();
+
       $handle->setName("T{$id}");
-      $handle->setFullName("T{$id}: {$title}");
+      $handle->setFullName("T{$id}: {$title} · {$estimated_story_points} Points");
       $handle->setURI("/T{$id}");
+      switch ($track) {
+        case 'Bug':
+          $handle->setIcon('fa-bug');
+          break;
+        case 'UI':
+          $handle->setIcon('fa-pain-brush');
+          break;
+        case 'Improve':
+          $handle->setIcon('fa-arrow-cicle-o-up');
+          break;
+        case 'Hotfix':
+          $handle->setIcon('fa-bolt');
+          break;
+        default:
+          $handle->setIcon('fa-tasks');
+          break;
+      }
+      $handle->setIcon($handle->getIcon() . ' ' . $bar_color);
+
 
       if ($task->isClosed()) {
         $handle->setStatus(PhabricatorObjectHandleStatus::STATUS_CLOSED);

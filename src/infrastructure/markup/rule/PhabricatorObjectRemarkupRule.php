@@ -79,6 +79,7 @@ abstract class PhabricatorObjectRemarkupRule extends PhutilRemarkupRule {
     $attr = array(
       'phid' => $handle->getPHID(),
       'closed'  => ($handle->getStatus() == $status_closed),
+      'icon' => $handle->getIcon()
     );
 
     return $this->renderHovertag($name, $href, $attr);
@@ -89,6 +90,7 @@ abstract class PhabricatorObjectRemarkupRule extends PhutilRemarkupRule {
       ->setName($name)
       ->setHref($href)
       ->setType(PHUITagView::TYPE_OBJECT)
+      ->setIcon(idx($attr, 'icon'))
       ->setPHID(idx($attr, 'phid'))
       ->setClosed(idx($attr, 'closed'))
       ->render();
