@@ -64,7 +64,7 @@ final class ManiphestTaskPHIDType extends PhabricatorPHIDType {
           $handle->setIcon('fa-pain-brush');
           break;
         case 'Improve':
-          $handle->setIcon('fa-arrow-cicle-o-up');
+          $handle->setIcon('fa-arrow-circle-o-up');
           break;
         case 'Hotfix':
           $handle->setIcon('fa-bolt');

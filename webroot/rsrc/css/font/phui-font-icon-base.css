@@ -148,6 +148,49 @@
   color: {$lightgreytext};
 }
 
+.phui-icon-view.redC {
+    color: #FF1E1B;
+}
+
+.phui-icon-view.redM4 {
+    color: #ff615f;
+}
+
+.phui-icon-view.redM8 {
+    color: #ffa4a3;
+}
+
+.phui-icon-view.greenP8 {
+    color: #127c24;
+}
+
+.phui-icon-view.greenP4 {
+    color: #1ab835;
+}
+
+.phui-icon-view.greenC {
+    color: #34e252;
+}
+
+.phui-icon-view.greenM4 {
+    color: #8def9e;
+}
+
+.phui-icon-view.greenM8 {
+    color: #baf5c4;
+}
+
+.phui-icon-view.blueC {
+    color: #0ca3f2;
+}
+
+.phui-icon-view.blueM4 {
+    color: #4cbcf6;
+}
+
+.phui-icon-view.blueM8 {
+    color: #8dd4f9;
+}
 /* Hovers */
 
 .device-desktop a.phui-icon-view.lightgreytext:hover,
