@@ -50,7 +50,8 @@ final class ManiphestTaskPHIDType extends PhabricatorPHIDType {
         '4' => 'Improve',
         '5' => 'Hotfix'
       );
-      $track = $tracks[$aux_fields['std:maniphest:huaban:track']->getValueForStorage()];
+      $track_value = $aux_fields['std:maniphest:huaban:track']->getValueForStorage();
+      $track = $tracks[$track_value ? $track_value : 0];
       $estimated_story_points = $aux_fields['std:maniphest:huaban:estimated-story-points']->getValueForStorage();
 
       $handle->setName("T{$id}");
