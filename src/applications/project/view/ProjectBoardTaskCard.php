@@ -62,7 +62,8 @@ final class ProjectBoardTaskCard {
       '4' => 'Improve',
       '5' => 'Hotfix'
     );
-    $track = $tracks[$aux_fields['std:maniphest:huaban:track']->getValueForStorage()];
+    $track_value = $aux_fields['std:maniphest:huaban:track']->getValueForStorage();
+    $track = $tracks[$track_value ? $track_value : 0];
     $estimated_story_points = $aux_fields['std:maniphest:huaban:estimated-story-points']->getValueForStorage();
     switch ($track) {
       case 'Feature':
@@ -85,7 +86,7 @@ final class ProjectBoardTaskCard {
         break;
     }
 
-    if ($estimated_story_points) {
+    if ($estimated_story_points != NULL) {
       $estimated_story_points = number_format((float)$estimated_story_points, 1, '.', '');
     }
 
