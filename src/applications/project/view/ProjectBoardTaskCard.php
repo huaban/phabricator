@@ -85,6 +85,10 @@ final class ProjectBoardTaskCard {
         break;
     }
 
+    if ($estimated_story_points) {
+      $estimated_story_points = number_format((float)$estimated_story_points, 1, '.', '');
+    }
+
     $card = id(new PHUIObjectItemView())
       ->setObjectName('T'.$task->getID())
       ->setHeader($task->getTitle())
