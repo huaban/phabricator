@@ -55,7 +55,7 @@ final class PhabricatorDashboardPanelTabsCustomField
     }
 
     $out = array();
-    for ($ii = 1; $ii <= 12; $ii++) {
+    for ($ii = 1; $ii <= 20; $ii++) {
       $tab = idx($value, ($ii - 1), array());
       $out[] = id(new AphrontFormTextControl())
         ->setName($this->getFieldKey().'_name[]')
