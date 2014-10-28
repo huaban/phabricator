@@ -73,7 +73,7 @@ final class ProjectBoardTaskCard {
         $icon = 'fa-bug';
         break;
       case 'UI':
-        $icon = 'fa-pain-brush';
+        $icon = 'fa-paint-brush';
         break;
       case 'Improve':
         $icon = 'fa-arrow-circle-o-up';
