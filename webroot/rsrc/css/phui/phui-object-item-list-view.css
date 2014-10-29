@@ -391,6 +391,10 @@
   border-left-color: {$violet};
 }
 
+.phui-object-item-bar-color-pink {
+  border-left-color: {$pink};
+}
+
 .phui-object-item-bar-color-grey {
   border-left-color: #bdc3c7;
 }
