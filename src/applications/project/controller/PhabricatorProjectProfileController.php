@@ -66,7 +66,7 @@ final class PhabricatorProjectProfileController
           ->setIconFont('fa-columns');
     $board_btn = id(new PHUIButtonView())
         ->setTag('a')
-        ->setText(pht('Workboards'))
+        ->setText(pht('Workboard'))
         ->setHref($this->getApplicationURI("board/{$id}/"))
         ->setIcon($icon);
 
@@ -261,6 +261,12 @@ final class PhabricatorProjectProfileController
       }
     }
 
+    $view->addAction(
+      id(new PhabricatorActionView())
+        ->setIcon('fa-book grey')
+        ->setName(pht('View Wiki'))
+        ->setWorkflow(true)
+        ->setHref('/project/wiki/'));
 
     return $view;
   }
