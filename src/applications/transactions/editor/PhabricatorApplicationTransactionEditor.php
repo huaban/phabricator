@@ -1899,6 +1899,8 @@ abstract class PhabricatorApplicationTransactionEditor
       $body->addReplySection($reply_section);
     }
 
+    $body->addEmailPreferenceSection();
+
     $template
       ->setFrom($this->getActingAsPHID())
       ->setSubjectPrefix($this->getMailSubjectPrefix())
@@ -2012,7 +2014,6 @@ abstract class PhabricatorApplicationTransactionEditor
   protected function buildReplyHandler(PhabricatorLiskDAO $object) {
     throw new Exception('Capability not supported.');
   }
-
 
   /**
    * @task mail
@@ -2159,10 +2160,11 @@ abstract class PhabricatorApplicationTransactionEditor
     }
 
     $body = new PhabricatorMetaMTAMailBody();
+    $body->setViewer($this->requireActor());
     $body->addRawSection(implode("\n", $headers));
 
     foreach ($comments as $comment) {
-      $body->addRawSection($comment);
+      $body->addRemarkupSection($comment);
     }
 
     if ($object instanceof PhabricatorCustomFieldInterface) {
