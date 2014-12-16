@@ -36,7 +36,6 @@
 }
 
 .phui-workboard-view .phui-object-item-link {
-  white-space: normal;
   display: inline;
   -webkit-font-smoothing: antialiased;
 }
