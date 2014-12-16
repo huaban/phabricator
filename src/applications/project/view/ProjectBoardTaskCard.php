@@ -90,9 +90,17 @@ final class ProjectBoardTaskCard {
       $estimated_story_points = number_format((float)$estimated_story_points, 1, '.', '');
     }
 
+    if(null != $owner)
+      $imageURI = $owner->getImageURI();
+    else {
+      $default_profile = PhabricatorFile::loadBuiltin($this->viewer, 'profile.png');
+      $imageURI = $default_profile->getViewURI();
+    }
+
     $card = id(new PHUIObjectItemView())
       ->setObjectName('T'.$task->getID())
       ->setHeader($task->getTitle())
+      ->setImageURI($imageURI)
 /**   ->addHandleIcon($icon . ' ' . $bar_color, )
       ->setImageIcon(id(new PHUIIconView())
         ->setIconFont($icon . ' ' . $bar_color . ' fa-2x'))
@@ -114,10 +122,6 @@ final class ProjectBoardTaskCard {
           ->addSigil('edit-project-card')
           ->setHref('/maniphest/task/edit/'.$task->getID().'/'))
       ->setBarColor($bar_color);
-
-    if ($owner) {
-      $card->addAttribute($owner->renderLink());
-    }
 
     return $card;
   }
