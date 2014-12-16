@@ -13,6 +13,8 @@ class PhabricatorApplicationTransactionView extends AphrontView {
   private $shouldTerminate = false;
   private $quoteTargetID;
   private $quoteRef;
+  private $pager;
+  private $renderData = array();
 
   public function setQuoteRef($quote_ref) {
     $this->quoteRef = $quote_ref;
@@ -66,9 +68,37 @@ class PhabricatorApplicationTransactionView extends AphrontView {
     return $this;
   }
 
+  public function getTransactions() {
+    return $this->transactions;
+  }
+
   public function setShouldTerminate($term) {
     $this->shouldTerminate = $term;
     return $this;
+  }
+
+  public function setPager(AphrontCursorPagerView $pager) {
+    $this->pager = $pager;
+    return $this;
+  }
+
+  public function getPager() {
+    return $this->pager;
+  }
+
+  /**
+   * This is additional data that may be necessary to render the next set
+   * of transactions. Objects that implement
+   * PhabricatorApplicationTransactionInterface use this data in
+   * willRenderTimeline.
+   */
+  public function setRenderData(array $data) {
+    $this->renderData = $data;
+    return $this;
+  }
+
+  public function getRenderData() {
+    return $this->renderData;
   }
 
   public function buildEvents($with_hiding = false) {
@@ -114,10 +144,12 @@ class PhabricatorApplicationTransactionView extends AphrontView {
 
     $events = array();
     $hide_by_default = ($show_group !== null);
+    $set_next_page_id = false;
 
     foreach ($groups as $group_key => $group) {
       if ($hide_by_default && ($show_group === $group_key)) {
         $hide_by_default = false;
+        $set_next_page_id = true;
       }
 
       $group_event = null;
@@ -128,6 +160,13 @@ class PhabricatorApplicationTransactionView extends AphrontView {
           $group_event = $event;
         } else {
           $group_event->addEventToGroup($event);
+        }
+        if ($set_next_page_id) {
+          $set_next_page_id = false;
+          $pager = $this->getPager();
+          if ($pager) {
+            $pager->setNextPageID($xaction->getID());
+          }
         }
       }
       $events[] = $group_event;
@@ -142,18 +181,37 @@ class PhabricatorApplicationTransactionView extends AphrontView {
       throw new Exception('Call setObjectPHID() before render()!');
     }
 
-    $view = new PHUITimelineView();
-    $view->setShouldTerminate($this->shouldTerminate);
-    $events = $this->buildEvents($with_hiding = true);
-    foreach ($events as $event) {
-      $view->addEvent($event);
-    }
+    $view = $this->buildPHUITimelineView();
 
     if ($this->getShowEditActions()) {
       Javelin::initBehavior('phabricator-transaction-list');
     }
 
     return $view->render();
+  }
+
+  public function buildPHUITimelineView($with_hiding = true) {
+    if (!$this->getObjectPHID()) {
+      throw new Exception(
+        'Call setObjectPHID() before buildPHUITimelineView()!');
+    }
+
+    $view = new PHUITimelineView();
+    $view->setShouldTerminate($this->shouldTerminate);
+    $view->setQuoteTargetID($this->getQuoteTargetID());
+    $view->setQuoteRef($this->getQuoteRef());
+    $events = $this->buildEvents($with_hiding);
+    foreach ($events as $event) {
+      $view->addEvent($event);
+    }
+    if ($this->getPager()) {
+      $view->setPager($this->getPager());
+    }
+    if ($this->getRenderData()) {
+      $view->setRenderData($this->getRenderData());
+    }
+
+    return $view;
   }
 
   protected function getOrBuildEngine() {
