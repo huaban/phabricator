@@ -93,7 +93,12 @@ final class ProjectBoardTaskCard {
     $card = id(new PHUIObjectItemView())
       ->setObjectName('T'.$task->getID())
       ->setHeader($task->getTitle())
-      ->addIcon($icon . ' ' . $bar_color, pht($estimated_story_points))
+/**   ->addHandleIcon($icon . ' ' . $bar_color, )
+      ->setImageIcon(id(new PHUIIconView())
+        ->setIconFont($icon . ' ' . $bar_color . ' fa-2x'))
+      ->addAttribute(pht($estimated_story_points))
+ */
+      ->addFootIcon($icon . ' ' . $bar_color, pht($estimated_story_points))
       ->setGrippable($can_edit)
       ->setHref('/T'.$task->getID())
       ->addSigil('project-card')
