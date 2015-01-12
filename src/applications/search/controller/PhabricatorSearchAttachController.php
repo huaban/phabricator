@@ -144,6 +144,7 @@ final class PhabricatorSearchAttachController
       ->setViewer($user)
       ->withPHIDs(array_keys($phids))
       ->needSubscriberPHIDs(true)
+      ->needProjectPHIDs(true)
       ->execute();
 
     if (empty($targets)) {
@@ -158,9 +159,13 @@ final class PhabricatorSearchAttachController
 
     $cc_vector = array();
     // since we loaded this via a generic object query, go ahead and get the
-    // attach the cc phids now
+    // attach the subscriber and project phids now
     $task->attachSubscriberPHIDs(
       PhabricatorSubscribersQuery::loadSubscribersForPHID($task->getPHID()));
+    $task->attachProjectPHIDs(
+      PhabricatorEdgeQuery::loadDestinationPHIDs($task->getPHID(),
+        PhabricatorProjectObjectHasProjectEdgeType::EDGECONST));
+
     $cc_vector[] = $task->getSubscriberPHIDs();
     foreach ($targets as $target) {
       $cc_vector[] = $target->getSubscriberPHIDs();
@@ -287,16 +292,16 @@ final class PhabricatorSearchAttachController
       ),
       $t_task => array(
         $t_cmit => ManiphestTaskHasCommitEdgeType::EDGECONST,
-        $t_task => PhabricatorEdgeConfig::TYPE_TASK_DEPENDS_ON_TASK,
+        $t_task => ManiphestTaskDependsOnTaskEdgeType::EDGECONST,
         $t_drev => ManiphestTaskHasRevisionEdgeType::EDGECONST,
-        $t_mock => PhabricatorEdgeConfig::TYPE_TASK_HAS_MOCK,
+        $t_mock => ManiphestTaskHasMockEdgeType::EDGECONST,
       ),
       $t_drev => array(
-        $t_drev => PhabricatorEdgeConfig::TYPE_DREV_DEPENDS_ON_DREV,
+        $t_drev => DifferentialRevisionDependsOnRevisionEdgeType::EDGECONST,
         $t_task => DifferentialRevisionHasTaskEdgeType::EDGECONST,
       ),
       $t_mock => array(
-        $t_task => PhabricatorEdgeConfig::TYPE_MOCK_HAS_TASK,
+        $t_task => PholioMockHasTaskEdgeType::EDGECONST,
       ),
     );
 

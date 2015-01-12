@@ -46,10 +46,10 @@ final class ManiphestTaskDetailController extends ManiphestController {
       ->readFieldsFromStorage($task);
 
     $e_commit = ManiphestTaskHasCommitEdgeType::EDGECONST;
-    $e_dep_on = PhabricatorEdgeConfig::TYPE_TASK_DEPENDS_ON_TASK;
-    $e_dep_by = PhabricatorEdgeConfig::TYPE_TASK_DEPENDED_ON_BY_TASK;
+    $e_dep_on = ManiphestTaskDependsOnTaskEdgeType::EDGECONST;
+    $e_dep_by = ManiphestTaskDependedOnByTaskEdgeType::EDGECONST;
     $e_rev    = ManiphestTaskHasRevisionEdgeType::EDGECONST;
-    $e_mock   = PhabricatorEdgeConfig::TYPE_TASK_HAS_MOCK;
+    $e_mock   = ManiphestTaskHasMockEdgeType::EDGECONST;
 
     $phid = $task->getPHID();
 
@@ -124,6 +124,7 @@ final class ManiphestTaskDetailController extends ManiphestController {
 
     $engine = new PhabricatorMarkupEngine();
     $engine->setViewer($user);
+    $engine->setContextObject($task);
     $engine->addObject($task, ManiphestTask::MARKUP_FIELD_DESCRIPTION);
 
     $timeline = $this->buildTransactionTimeline(
@@ -139,7 +140,7 @@ final class ManiphestTaskDetailController extends ManiphestController {
       ManiphestTransaction::TYPE_OWNER          => pht('Reassign / Claim'),
       PhabricatorTransactions::TYPE_SUBSCRIBERS => pht('Add CCs'),
       ManiphestTransaction::TYPE_PRIORITY       => pht('Change Priority'),
-      ManiphestTransaction::TYPE_PROJECTS       => pht('Associate Projects'),
+      PhabricatorTransactions::TYPE_EDGE        => pht('Associate Projects'),
     );
 
     // Remove actions the user doesn't have permission to take.
@@ -149,7 +150,7 @@ final class ManiphestTaskDetailController extends ManiphestController {
         ManiphestEditAssignCapability::CAPABILITY,
       ManiphestTransaction::TYPE_PRIORITY =>
         ManiphestEditPriorityCapability::CAPABILITY,
-      ManiphestTransaction::TYPE_PROJECTS =>
+      PhabricatorTransactions::TYPE_EDGE =>
         ManiphestEditProjectsCapability::CAPABILITY,
       ManiphestTransaction::TYPE_STATUS =>
         ManiphestEditStatusCapability::CAPABILITY,
@@ -264,7 +265,7 @@ final class ManiphestTaskDetailController extends ManiphestController {
       ManiphestTransaction::TYPE_OWNER          => 'assign_to',
       PhabricatorTransactions::TYPE_SUBSCRIBERS => 'ccs',
       ManiphestTransaction::TYPE_PRIORITY       => 'priority',
-      ManiphestTransaction::TYPE_PROJECTS       => 'projects',
+      PhabricatorTransactions::TYPE_EDGE        => 'projects',
     );
 
     $projects_source = new PhabricatorProjectDatasource();
@@ -272,7 +273,7 @@ final class ManiphestTaskDetailController extends ManiphestController {
     $mailable_source = new PhabricatorMetaMTAMailableDatasource();
 
     $tokenizer_map = array(
-      ManiphestTransaction::TYPE_PROJECTS => array(
+      PhabricatorTransactions::TYPE_EDGE => array(
         'id'          => 'projects-tokenizer',
         'src'         => $projects_source->getDatasourceURI(),
         'placeholder' => $projects_source->getPlaceholderText(),
@@ -482,13 +483,13 @@ final class ManiphestTaskDetailController extends ManiphestController {
     }
 
     $edge_types = array(
-      PhabricatorEdgeConfig::TYPE_TASK_DEPENDED_ON_BY_TASK
+      ManiphestTaskDependedOnByTaskEdgeType::EDGECONST
         => pht('Blocks'),
-      PhabricatorEdgeConfig::TYPE_TASK_DEPENDS_ON_TASK
+      ManiphestTaskDependsOnTaskEdgeType::EDGECONST
         => pht('Blocked By'),
       ManiphestTaskHasRevisionEdgeType::EDGECONST
         => pht('Differential Revisions'),
-      PhabricatorEdgeConfig::TYPE_TASK_HAS_MOCK
+      ManiphestTaskHasMockEdgeType::EDGECONST
         => pht('Pholio Mocks'),
     );
 
@@ -498,7 +499,7 @@ final class ManiphestTaskDetailController extends ManiphestController {
     $commit_phids = array_keys(
       $edges[ManiphestTaskHasCommitEdgeType::EDGECONST]);
     if ($commit_phids) {
-      $commit_drev = PhabricatorEdgeConfig::TYPE_COMMIT_HAS_DREV;
+      $commit_drev = DiffusionCommitHasRevisionEdgeType::EDGECONST;
       $drev_edges = id(new PhabricatorEdgeQuery())
         ->withSourcePHIDs($commit_phids)
         ->withEdgeTypes(array($commit_drev))

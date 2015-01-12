@@ -80,7 +80,7 @@ final class PhabricatorProjectProfileController
     if ($project->getStatus() == PhabricatorProjectStatus::STATUS_ACTIVE) {
       $header->setStatus('fa-check', 'bluegrey', pht('Active'));
     } else {
-      $header->setStatus('fa-ban', 'dark', pht('Archived'));
+      $header->setStatus('fa-ban', 'red', pht('Archived'));
     }
 
     $actions = $this->buildActionListView($project);
@@ -137,14 +137,20 @@ final class PhabricatorProjectProfileController
   private function renderTasksPage(PhabricatorProject $project) {
 
     $user = $this->getRequest()->getUser();
+    $limit = 10;
 
     $query = id(new ManiphestTaskQuery())
       ->setViewer($user)
       ->withAnyProjects(array($project->getPHID()))
       ->withStatuses(ManiphestTaskStatus::getOpenStatusConstants())
       ->setOrderBy(ManiphestTaskQuery::ORDER_PRIORITY)
-      ->setLimit(10);
+      ->needProjectPHIDs(true)
+      ->setLimit(($limit + 1));
     $tasks = $query->execute();
+    $count = count($tasks);
+    if ($count == ($limit + 1)) {
+      array_pop($tasks);
+    }
 
     $phids = mpull($tasks, 'getOwnerPHID');
     $phids = array_merge(
@@ -179,10 +185,15 @@ final class PhabricatorProjectProfileController
       ->setHref($create_uri)
       ->setIcon($icon_new);
 
-    $header = id(new PHUIHeaderView())
-      ->setHeader(pht('Open Tasks'))
-      ->addActionLink($button_add)
-      ->addActionLink($button_view);
+      $header = id(new PHUIHeaderView())
+        ->addActionLink($button_add)
+        ->addActionLink($button_view);
+
+    if ($count > $limit) {
+        $header->setHeader(pht('Highest Priority (some)'));
+    } else {
+        $header->setHeader(pht('Highest Priority (all)'));
+    }
 
     $content = id(new PHUIObjectBoxView())
       ->setHeader($header)

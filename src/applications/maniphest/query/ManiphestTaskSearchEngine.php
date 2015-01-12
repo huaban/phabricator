@@ -34,7 +34,7 @@ final class ManiphestTaskSearchEngine
     return pht('Tasks');
   }
 
-  public function getApplicationClassName() {
+  protected function getApplicationClassName() {
     return 'PhabricatorManiphestApplication';
   }
 
@@ -119,7 +119,8 @@ final class ManiphestTaskSearchEngine
   }
 
   public function buildQueryFromSavedQuery(PhabricatorSavedQuery $saved) {
-    $query = id(new ManiphestTaskQuery());
+    $query = id(new ManiphestTaskQuery())
+      ->needProjectPHIDs(true);
 
     $author_phids = $saved->getParameter('authorPHIDs');
     if ($author_phids) {
@@ -436,7 +437,7 @@ final class ManiphestTaskSearchEngine
     return '/maniphest/'.$path;
   }
 
-  public function getBuiltinQueryNames() {
+  protected function getBuiltinQueryNames() {
     $names = array();
 
     if ($this->requireViewer()->isLoggedIn()) {

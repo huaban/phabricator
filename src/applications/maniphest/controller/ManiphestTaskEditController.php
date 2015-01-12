@@ -39,6 +39,7 @@ final class ManiphestTaskEditController extends ManiphestController {
           ))
         ->withIDs(array($this->id))
         ->needSubscriberPHIDs(true)
+        ->needProjectPHIDs(true)
         ->executeOne();
       if (!$task) {
         return new Aphront404Response();
@@ -125,11 +126,14 @@ final class ManiphestTaskEditController extends ManiphestController {
 
       // You can only have a parent task if you're creating a new task.
       $parent_id = $request->getInt('parent');
-      if ($parent_id) {
+      if (strlen($parent_id)) {
         $parent_task = id(new ManiphestTaskQuery())
           ->setViewer($user)
           ->withIDs(array($parent_id))
           ->executeOne();
+        if (!$parent_task) {
+          return new Aphront404Response();
+        }
         if (!$template_id) {
           $template_id = $parent_id;
         }
@@ -233,7 +237,7 @@ final class ManiphestTaskEditController extends ManiphestController {
 
         if ($can_edit_projects) {
           $projects = $request->getArr('projects');
-          $changes[ManiphestTransaction::TYPE_PROJECTS] =
+          $changes[PhabricatorTransactions::TYPE_EDGE] =
             $projects;
           $column_phid = $request->getStr('columnPHID');
           // allow for putting a task in a project column at creation -only-
@@ -275,12 +279,10 @@ final class ManiphestTaskEditController extends ManiphestController {
           if ($type == ManiphestTransaction::TYPE_PROJECT_COLUMN) {
             $transaction->setNewValue($value['new']);
             $transaction->setOldValue($value['old']);
-          } else if ($type == ManiphestTransaction::TYPE_PROJECTS) {
-            // TODO: Gross.
+          } else if ($type == PhabricatorTransactions::TYPE_EDGE) {
             $project_type =
               PhabricatorProjectObjectHasProjectEdgeType::EDGECONST;
             $transaction
-              ->setTransactionType(PhabricatorTransactions::TYPE_EDGE)
               ->setMetadataValue('edge:type', $project_type)
               ->setNewValue(
                 array(
@@ -350,7 +352,7 @@ final class ManiphestTaskEditController extends ManiphestController {
           id(new PhabricatorEdgeEditor())
             ->addEdge(
               $parent_task->getPHID(),
-              PhabricatorEdgeConfig::TYPE_TASK_DEPENDS_ON_TASK,
+              ManiphestTaskDependsOnTaskEdgeType::EDGECONST,
               $task->getPHID())
             ->save();
           $workflow = $parent_task->getID();
@@ -381,6 +383,17 @@ final class ManiphestTaskEditController extends ManiphestController {
                 return new Aphront404Response();
               }
 
+              // re-load projects for accuracy as they are not re-loaded via
+              // the editor
+              $project_phids = PhabricatorEdgeQuery::loadDestinationPHIDs(
+                $task->getPHID(),
+                PhabricatorProjectObjectHasProjectEdgeType::EDGECONST);
+              $task->attachProjectPHIDs($project_phids);
+              $remove_from_board = false;
+              if (!in_array($column->getProjectPHID(), $project_phids)) {
+                $remove_from_board = true;
+              }
+
               $positions = id(new PhabricatorProjectColumnPositionQuery())
                 ->setViewer($user)
                 ->withColumns(array($column))
@@ -395,7 +408,7 @@ final class ManiphestTaskEditController extends ManiphestController {
               if ($order == PhabricatorProjectColumn::ORDER_NATURAL) {
                 // TODO: This is a little bit awkward, because PHP and JS use
                 // slightly different sort order parameters to achieve the same
-                // effect. It would be unify this a bit at some point.
+                // effect. It would be good to unify this a bit at some point.
                 $sort_map = array();
                 foreach ($positions as $position) {
                   $sort_map[$position->getObjectPHID()] = array(
@@ -412,6 +425,7 @@ final class ManiphestTaskEditController extends ManiphestController {
 
               $data = array(
                 'sortMap' => $sort_map,
+                'removeFromBoard' => $remove_from_board,
               );
               break;
             case 'task':
@@ -446,6 +460,7 @@ final class ManiphestTaskEditController extends ManiphestController {
             ->setViewer($user)
             ->withIDs(array($template_id))
             ->needSubscriberPHIDs(true)
+            ->needProjectPHIDs(true)
             ->executeOne();
           if ($template_task) {
             $cc_phids = array_unique(array_merge(

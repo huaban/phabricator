@@ -5,6 +5,12 @@ final class PhabricatorProjectEditMainController
 
   private $id;
 
+  public function shouldAllowPublic() {
+    // This page shows project history and some detailed information, and
+    // it's reasonable to allow public access to it.
+    return true;
+  }
+
   public function willProcessRequest(array $data) {
     $this->id = idx($data, 'id');
   }
@@ -31,7 +37,7 @@ final class PhabricatorProjectEditMainController
     if ($project->getStatus() == PhabricatorProjectStatus::STATUS_ACTIVE) {
       $header->setStatus('fa-check', 'bluegrey', pht('Active'));
     } else {
-      $header->setStatus('fa-ban', 'dark', pht('Archived'));
+      $header->setStatus('fa-ban', 'red', pht('Archived'));
     }
 
     $actions = $this->buildActionListView($project);
@@ -98,7 +104,7 @@ final class PhabricatorProjectEditMainController
     if ($project->isArchived()) {
       $view->addAction(
         id(new PhabricatorActionView())
-          ->setName(pht('Unarchive Project'))
+          ->setName(pht('Activate Project'))
           ->setIcon('fa-check')
           ->setHref($this->getApplicationURI("archive/{$id}/"))
           ->setDisabled(!$can_edit)
