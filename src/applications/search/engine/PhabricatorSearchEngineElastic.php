@@ -277,7 +277,7 @@ final class PhabricatorSearchEngineElastic extends PhabricatorSearchEngine {
     foreach ($types as $type) {
       // Use the custom trigram analyzer for the corpus of text
       $data['mappings'][$type]['properties']['field']['properties']['corpus'] =
-        array( 'type' => 'string', 'analyzer' => 'custom_trigrams' );
+        array( 'type' => 'string', 'analyzer' => 'standard' );
 
       // Ensure we have dateCreated since the default query requires it
       $data['mappings'][$type]['properties']['dateCreated']['type'] = 'string';

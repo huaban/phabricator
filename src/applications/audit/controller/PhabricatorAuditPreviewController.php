@@ -70,9 +70,28 @@ final class PhabricatorAuditPreviewController
       $xaction->setHandles($handles);
     }
 
+    $path_ids = array();
+    foreach ($xactions as $xaction) {
+      if ($xaction->hasComment()) {
+        $path_id = $xaction->getComment()->getPathID();
+        if ($path_id) {
+          $path_ids[] = $path_id;
+        }
+      }
+    }
+
+    $path_map = array();
+    if ($path_ids) {
+      $path_map = id(new DiffusionPathQuery())
+        ->withPathIDs($path_ids)
+        ->execute();
+      $path_map = ipull($path_map, 'path', 'id');
+    }
+
     $view = id(new PhabricatorAuditTransactionView())
       ->setIsPreview(true)
       ->setUser($user)
+      ->setPathMap($path_map)
       ->setObjectPHID($commit->getPHID())
       ->setTransactions($xactions);
 
