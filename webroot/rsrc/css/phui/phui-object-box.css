@@ -2,6 +2,10 @@
  * @provides phui-object-box-css
  */
 
+.phui-object-box {
+  position: relative;
+}
+
 div.phui-object-box.phui-object-box-flush {
   margin-top: 0;
 }
@@ -13,7 +17,7 @@ div.phui-object-box.phui-object-box-flush {
 }
 
 .phui-object-box .phui-header-image {
-  margin: 1px 8px 0px -7px;
+  margin: 1px 8px -7px -7px;
 }
 
 .phui-object-box .phui-header-shell h1 {
@@ -21,7 +25,7 @@ div.phui-object-box.phui-object-box-flush {
   padding: 8px 0;
 }
 
-.phui-object-box .phui-header-shell + .aphront-error-view {
+.phui-object-box .phui-header-shell + .phui-info-view {
   margin: 0;
   border-width: 0;
   border-bottom: 1px solid {$lightblueborder};

@@ -32,25 +32,18 @@ final class DifferentialRepositoryField
     $this->setValue(nonempty($first, null));
   }
 
-  public function getRequiredHandlePHIDsForEdit() {
-    $phids = array();
-    if ($this->getValue()) {
-      $phids[] = $this->getValue();
-    }
-    return $phids;
-  }
-
   public function renderEditControl(array $handles) {
     if ($this->getValue()) {
-      $control_value = array_select_keys($handles, array($this->getValue()));
+      $value = array($this->getValue());
     } else {
-      $control_value = array();
+      $value = array();
     }
 
     return id(new AphrontFormTokenizerControl())
+      ->setUser($this->getViewer())
       ->setName($this->getFieldKey())
       ->setDatasource(new DiffusionRepositoryDatasource())
-      ->setValue($control_value)
+      ->setValue($value)
       ->setError($this->getFieldError())
       ->setLabel($this->getFieldName())
       ->setLimit(1);
@@ -162,7 +155,8 @@ final class DifferentialRepositoryField
       return;
     }
 
-    $body->addTextSection(pht('REPOSITORY'),
+    $body->addTextSection(
+      pht('REPOSITORY'),
       $repository->getMonogram().' '.$repository->getName());
   }
 

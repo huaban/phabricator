@@ -15,7 +15,7 @@ final class PhabricatorConduitToken
   const TYPE_COMMANDLINE = 'cli';
   const TYPE_CLUSTER = 'clr';
 
-  public function getConfiguration() {
+  protected function getConfiguration() {
     return array(
       self::CONFIG_COLUMN_SCHEMA => array(
         'tokenType' => 'text32',
@@ -65,7 +65,7 @@ final class PhabricatorConduitToken
     // to expire) so generate a new token.
 
     $unguarded = AphrontWriteGuard::beginScopedUnguardedWrites();
-      $token = PhabricatorConduitToken::initializeNewToken(
+      $token = self::initializeNewToken(
         $user->getPHID(),
         self::TYPE_CLUSTER);
       $token->save();

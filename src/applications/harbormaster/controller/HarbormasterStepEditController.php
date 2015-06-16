@@ -68,12 +68,7 @@ final class HarbormasterStepEditController extends HarbormasterController {
     $e_description = true;
     $v_description = $step->getDescription();
     $e_depends_on = true;
-    $raw_depends_on = $step->getDetail('dependsOn', array());
-
-    $v_depends_on = id(new PhabricatorHandleQuery())
-      ->setViewer($viewer)
-      ->withPHIDs($raw_depends_on)
-      ->execute();
+    $v_depends_on = $step->getDetail('dependsOn', array());
 
     $errors = array();
     $validation_exception = null;
@@ -138,7 +133,7 @@ final class HarbormasterStepEditController extends HarbormasterController {
           ->setValue($v_name));
 
     $form
-      ->appendChild(
+      ->appendControl(
         id(new AphrontFormTokenizerControl())
           ->setDatasource(id(new HarbormasterBuildDependencyDatasource())
             ->setParameters(array(
@@ -218,8 +213,9 @@ final class HarbormasterStepEditController extends HarbormasterController {
 
     $rows = array();
     $rows[] = pht(
-      'The following variables can be used in most fields. To reference '.
-      'a variable, use `${name}` in a field.');
+      'The following variables can be used in most fields. '.
+      'To reference a variable, use `%s` in a field.',
+      '${name}');
     $rows[] = pht('| Variable | Description |');
     $rows[] = '|---|---|';
     foreach ($variables as $name => $description) {

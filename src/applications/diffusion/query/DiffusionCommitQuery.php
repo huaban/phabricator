@@ -144,13 +144,15 @@ final class DiffusionCommitQuery
   public function getIdentifierMap() {
     if ($this->identifierMap === null) {
       throw new Exception(
-        'You must execute() the query before accessing the identifier map.');
+        pht(
+          'You must %s the query before accessing the identifier map.',
+          'execute()'));
     }
     return $this->identifierMap;
   }
 
-  protected function getPagingColumn() {
-    return 'commit.id';
+  protected function getPrimaryTableAlias() {
+    return 'commit';
   }
 
   protected function willExecute() {
@@ -191,6 +193,7 @@ final class DiffusionCommitQuery
       if ($repo) {
         $commit->attachRepository($repo);
       } else {
+        $this->didRejectResult($commit);
         unset($commits[$key]);
         continue;
       }
@@ -279,7 +282,7 @@ final class DiffusionCommitQuery
     return $commits;
   }
 
-  private function buildWhereClause(AphrontDatabaseConnection $conn_r) {
+  protected function buildWhereClause(AphrontDatabaseConnection $conn_r) {
     $where = array();
 
     if ($this->repositoryPHIDs !== null) {
@@ -491,8 +494,10 @@ final class DiffusionCommitQuery
             self::AUDIT_STATUS_PARTIAL,
           );
           throw new Exception(
-            "Unknown audit status '{$status}'! Valid statuses are: ".
-            implode(', ', $valid));
+            pht(
+              "Unknown audit status '%s'! Valid statuses are: %s.",
+              $status,
+              implode(', ', $valid)));
       }
     }
 
@@ -501,7 +506,7 @@ final class DiffusionCommitQuery
     return $this->formatWhereClause($where);
   }
 
-  public function didFilterResults(array $filtered) {
+  protected function didFilterResults(array $filtered) {
     if ($this->identifierMap) {
       foreach ($this->identifierMap as $name => $commit) {
         if (isset($filtered[$commit->getPHID()])) {
@@ -511,7 +516,7 @@ final class DiffusionCommitQuery
     }
   }
 
-  private function buildJoinClause($conn_r) {
+  protected function buildJoinClause(AphrontDatabaseConnection $conn_r) {
     $joins = array();
     $audit_request = new PhabricatorRepositoryAuditRequest();
 
@@ -542,7 +547,7 @@ final class DiffusionCommitQuery
     }
   }
 
-  private function buildGroupClause(AphrontDatabaseConnection $conn_r) {
+  protected function buildGroupClause(AphrontDatabaseConnection $conn_r) {
     $should_group = $this->shouldJoinAudits();
 
     // TODO: Currently, the audit table is missing a unique key, so we may

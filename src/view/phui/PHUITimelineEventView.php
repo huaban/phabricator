@@ -25,6 +25,7 @@ final class PHUITimelineEventView extends AphrontView {
   private $isNormalComment;
   private $quoteRef;
   private $reallyMajorEvent;
+  private $hideCommentOptions = false;
 
   public function setQuoteRef($quote_ref) {
     $this->quoteRef = $quote_ref;
@@ -164,6 +165,15 @@ final class PHUITimelineEventView extends AphrontView {
     return $this;
   }
 
+  public function setHideCommentOptions($hide_comment_options) {
+    $this->hideCommentOptions = $hide_comment_options;
+    return $this;
+  }
+
+  public function getHideCommentOptions() {
+    return $this->hideCommentOptions;
+  }
+
   public function setToken($token, $removed = false) {
     $this->token = $token;
     $this->tokenRemoved = $removed;
@@ -259,7 +269,7 @@ final class PHUITimelineEventView extends AphrontView {
     $menu = null;
     $items = array();
     $has_menu = false;
-    if (!$this->getIsPreview()) {
+    if (!$this->getIsPreview() && !$this->getHideCommentOptions()) {
       foreach ($this->getEventGroup() as $event) {
         $items[] = $event->getMenuItems($this->anchor);
         if ($event->hasChildren()) {
@@ -280,8 +290,8 @@ final class PHUITimelineEventView extends AphrontView {
         pht('Comment Actions'));
 
       if ($items) {
-        $sigil = 'phui-timeline-menu';
-        Javelin::initBehavior('phui-timeline-dropdown-menu');
+        $sigil = 'phui-dropdown-menu';
+        Javelin::initBehavior('phui-dropdown-menu');
       } else {
         $sigil = null;
       }
@@ -425,7 +435,8 @@ final class PHUITimelineEventView extends AphrontView {
           'class' => 'phui-timeline-event-view '.
                      'phui-timeline-spacer '.
                      'phui-timeline-spacer-bold',
-        '',));
+          '',
+        ));
     }
 
     return array(
@@ -443,7 +454,8 @@ final class PHUITimelineEventView extends AphrontView {
             'class' => implode(' ', $classes),
           ),
           $content)),
-      $major_event,);
+      $major_event,
+    );
   }
 
   private function renderExtra(array $events) {

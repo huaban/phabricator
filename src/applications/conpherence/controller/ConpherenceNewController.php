@@ -2,8 +2,7 @@
 
 final class ConpherenceNewController extends ConpherenceController {
 
-  public function processRequest() {
-    $request = $this->getRequest();
+  public function handleRequest(AphrontRequest $request) {
     $user = $request->getUser();
 
     $title = pht('New Message');
@@ -12,13 +11,14 @@ final class ConpherenceNewController extends ConpherenceController {
     $message = '';
     $e_participants = null;
     $e_message = null;
+    $errors = array();
 
     // this comes from ajax requests from all over. should be a single phid.
 
     if ($request->isFormPost()) {
       $participants = $request->getArr('participants');
       $message = $request->getStr('message');
-      list($error_codes, $conpherence) = ConpherenceEditor::createConpherence(
+      list($error_codes, $conpherence) = ConpherenceEditor::createThread(
         $user,
         $participants,
         $conpherence_title = null,
@@ -29,17 +29,21 @@ final class ConpherenceNewController extends ConpherenceController {
         foreach ($error_codes as $error_code) {
           switch ($error_code) {
             case ConpherenceEditor::ERROR_EMPTY_MESSAGE:
-              $e_message = true;
+              $e_message = pht('Required');
+              $errors[] = pht(
+                'You can not send an empty message.');
               break;
             case ConpherenceEditor::ERROR_EMPTY_PARTICIPANTS:
-              $e_participants = true;
+              $e_participants = pht('Required');
+              $errors[] = pht(
+                'You must choose at least one recipient for your '.
+                'message.');
               break;
           }
         }
       } else {
-        $uri = $this->getApplicationURI($conpherence->getID());
         return id(new AphrontRedirectResponse())
-          ->setURI($uri);
+          ->setURI('/'.$conpherence->getMonogram());
       }
     } else {
       $participant_prefill = $request->getStr('participant');
@@ -48,43 +52,28 @@ final class ConpherenceNewController extends ConpherenceController {
       }
     }
 
-
-    $participant_handles = array();
-    if ($participants) {
-      $participant_handles = id(new PhabricatorHandleQuery())
-        ->setViewer($user)
-        ->withPHIDs($participants)
-        ->execute();
-    }
-
     $submit_uri = $this->getApplicationURI('new/');
     $cancel_uri = $this->getApplicationURI();
 
-    // TODO - we can get a better cancel_uri once we get better at crazy
-    // ajax jonx T2086
-    if ($participant_prefill) {
-      $handle = $participant_handles[$participant_prefill];
-      $cancel_uri = $handle->getURI();
-    }
-
     $dialog = id(new AphrontDialogView())
       ->setWidth(AphrontDialogView::WIDTH_FORM)
+      ->setErrors($errors)
       ->setUser($user)
       ->setTitle($title)
       ->addCancelButton($cancel_uri)
       ->addSubmitButton(pht('Send Message'));
 
-    $form = id(new PHUIFormLayoutView())
+    $form = id(new AphrontFormView())
       ->setUser($user)
       ->setFullWidth(true)
-      ->appendChild(
+      ->appendControl(
         id(new AphrontFormTokenizerControl())
-        ->setName('participants')
-        ->setValue($participant_handles)
-        ->setUser($user)
-        ->setDatasource(new PhabricatorPeopleDatasource())
-        ->setLabel(pht('To'))
-        ->setError($e_participants))
+          ->setName('participants')
+          ->setValue($participants)
+          ->setUser($user)
+          ->setDatasource(new PhabricatorPeopleDatasource())
+          ->setLabel(pht('To'))
+          ->setError($e_participants))
       ->appendChild(
         id(new PhabricatorRemarkupControl())
           ->setUser($user)
@@ -93,7 +82,7 @@ final class ConpherenceNewController extends ConpherenceController {
           ->setLabel(pht('Message'))
           ->setError($e_message));
 
-    $dialog->appendChild($form);
+    $dialog->appendForm($form);
 
     return id(new AphrontDialogResponse())->setDialog($dialog);
   }

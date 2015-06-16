@@ -92,6 +92,7 @@
 
 .phui-timeline-image {
   background-repeat: no-repeat;
+  background-size: 100%;
   position: absolute;
   border-radius: 3px;
 }
@@ -369,4 +370,8 @@ a.phui-timeline-menu .phui-icon-view {
 
 .phui-timeline-menu.phuix-dropdown-open {
   background: {$hovergrey};
+}
+
+.phui-timeline-view + .phui-object-box {
+  margin-top: 0;
 }

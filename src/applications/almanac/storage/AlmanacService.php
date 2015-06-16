@@ -31,7 +31,7 @@ final class AlmanacService
       ->setIsLocked(0);
   }
 
-  public function getConfiguration() {
+  protected function getConfiguration() {
     return array(
       self::CONFIG_AUX_PHID => true,
       self::CONFIG_COLUMN_SCHEMA => array(
@@ -221,7 +221,7 @@ final class AlmanacService
     PhabricatorDestructionEngine $engine) {
 
     $bindings = id(new AlmanacBindingQuery())
-      ->setViewer(PhabricatorUser::getOmnipotentUser())
+      ->setViewer($engine->getViewer())
       ->withServicePHIDs(array($this->getPHID()))
       ->execute();
     foreach ($bindings as $binding) {

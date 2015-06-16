@@ -63,7 +63,7 @@ final class HarbormasterPlanRunController extends HarbormasterController {
     }
 
     if ($errors) {
-      $errors = id(new AphrontErrorView())->setErrors($errors);
+      $errors = id(new PHUIInfoView())->setErrors($errors);
     }
 
     $title = pht('Run Build Plan Manually');
@@ -82,7 +82,7 @@ final class HarbormasterPlanRunController extends HarbormasterController {
           $plan->getID()))
       ->appendChild(
         id(new AphrontFormTextControl())
-          ->setLabel('Buildable Name')
+          ->setLabel(pht('Buildable Name'))
           ->setName('buildablePHID')
           ->setError($e_name)
           ->setValue($v_name));

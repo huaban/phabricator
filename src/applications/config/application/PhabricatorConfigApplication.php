@@ -6,8 +6,8 @@ final class PhabricatorConfigApplication extends PhabricatorApplication {
     return '/config/';
   }
 
-  public function getIconName() {
-    return 'setup';
+  public function getFontIcon() {
+    return 'fa-sliders';
   }
 
   public function isPinnedByDefault(PhabricatorUser $viewer) {
@@ -55,6 +55,7 @@ final class PhabricatorConfigApplication extends PhabricatorApplication {
           '' => 'PhabricatorConfigIssueListController',
           '(?P<key>[^/]+)/' => 'PhabricatorConfigIssueViewController',
         ),
+        'cache/' => 'PhabricatorConfigCacheController',
       ),
     );
   }

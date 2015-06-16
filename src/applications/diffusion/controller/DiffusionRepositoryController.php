@@ -60,17 +60,16 @@ final class DiffusionRepositoryController extends DiffusionController {
         }
       } else {
         $empty_title = pht('Empty Repository');
-        $empty_message = pht(
-          'This repository does not have any commits yet.');
+        $empty_message = pht('This repository does not have any commits yet.');
       }
     }
 
     if ($page_has_content) {
       $content[] = $this->buildNormalContent($drequest);
     } else {
-      $content[] = id(new AphrontErrorView())
+      $content[] = id(new PHUIInfoView())
         ->setTitle($empty_title)
-        ->setSeverity(AphrontErrorView::SEVERITY_WARNING)
+        ->setSeverity(PHUIInfoView::SEVERITY_WARNING)
         ->setErrors(array($empty_message));
     }
 
@@ -234,10 +233,9 @@ final class DiffusionRepositoryController extends DiffusionController {
       $repository->getPHID(),
       PhabricatorProjectObjectHasProjectEdgeType::EDGECONST);
     if ($project_phids) {
-      $this->loadHandles($project_phids);
       $view->addProperty(
         pht('Projects'),
-        $this->renderHandlesForPHIDs($project_phids));
+        $user->renderHandleList($project_phids));
     }
 
     if ($repository->isHosted()) {
@@ -304,10 +302,40 @@ final class DiffusionRepositoryController extends DiffusionController {
 
     $view->setActionList($actions);
 
-    return id(new PHUIObjectBoxView())
+    $box = id(new PHUIObjectBoxView())
       ->setHeader($header)
       ->addPropertyList($view);
 
+    $info = null;
+    $drequest = $this->getDiffusionRequest();
+    if ($drequest->getRefAlternatives()) {
+      $message = array(
+        pht(
+          'The ref "%s" is ambiguous in this repository.',
+          $drequest->getBranch()),
+        ' ',
+        phutil_tag(
+          'a',
+          array(
+            'href' => $drequest->generateURI(
+              array(
+                'action' => 'refs',
+              )),
+          ),
+          pht('View Alternatives')),
+      );
+
+      $messages = array($message);
+
+      $info = id(new PHUIInfoView())
+        ->setSeverity(PHUIInfoView::SEVERITY_WARNING)
+        ->setErrors(array($message));
+
+      $box->setInfoView($info);
+    }
+
+
+    return $box;
   }
 
   private function buildBranchListTable(DiffusionRequest $drequest) {
@@ -322,6 +350,7 @@ final class DiffusionRepositoryController extends DiffusionController {
     $branches = $this->callConduitWithDiffusionRequest(
       'diffusion.branchquery',
       array(
+        'closed' => false,
         'limit' => $limit + 1,
       ));
     if (!$branches) {
@@ -361,9 +390,9 @@ final class DiffusionRepositoryController extends DiffusionController {
     $button->setTag('a');
     $button->setIcon($icon);
     $button->setHref($drequest->generateURI(
-            array(
-              'action' => 'branches',
-            )));
+      array(
+        'action' => 'branches',
+      )));
 
     $header->addActionLink($button);
     $panel->setHeader($header);
@@ -374,23 +403,23 @@ final class DiffusionRepositoryController extends DiffusionController {
 
   private function buildTagListTable(DiffusionRequest $drequest) {
     $viewer = $this->getRequest()->getUser();
+    $repository = $drequest->getRepository();
 
+    switch ($repository->getVersionControlSystem()) {
+      case PhabricatorRepositoryType::REPOSITORY_TYPE_SVN:
+        // no tags in SVN
+        return null;
+    }
     $tag_limit = 15;
     $tags = array();
-    try {
-      $tags = DiffusionRepositoryTag::newFromConduit(
-        $this->callConduitWithDiffusionRequest(
-          'diffusion.tagsquery',
-          array(
-            // On the home page, we want to find tags on any branch.
-            'commit' => null,
-            'limit' => $tag_limit + 1,
-          )));
-    } catch (ConduitException $e) {
-      if ($e->getMessage() != 'ERR-UNSUPPORTED-VCS') {
-        throw $e;
-      }
-    }
+    $tags = DiffusionRepositoryTag::newFromConduit(
+      $this->callConduitWithDiffusionRequest(
+        'diffusion.tagsquery',
+        array(
+          // On the home page, we want to find tags on any branch.
+          'commit' => null,
+          'limit' => $tag_limit + 1,
+        )));
 
     if (!$tags) {
       return null;
@@ -402,7 +431,7 @@ final class DiffusionRepositoryController extends DiffusionController {
     $commits = id(new DiffusionCommitQuery())
       ->setViewer($viewer)
       ->withIdentifiers(mpull($tags, 'getCommitIdentifier'))
-      ->withRepository($drequest->getRepository())
+      ->withRepository($repository)
       ->needCommitData(true)
       ->execute();
 

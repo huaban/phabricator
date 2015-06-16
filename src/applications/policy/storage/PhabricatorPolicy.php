@@ -2,7 +2,9 @@
 
 final class PhabricatorPolicy
   extends PhabricatorPolicyDAO
-  implements PhabricatorPolicyInterface {
+  implements
+    PhabricatorPolicyInterface,
+    PhabricatorDestructibleInterface {
 
   const ACTION_ALLOW = 'allow';
   const ACTION_DENY = 'deny';
@@ -19,7 +21,7 @@ final class PhabricatorPolicy
 
   private $ruleObjects = self::ATTACHABLE;
 
-  public function getConfiguration() {
+  protected function getConfiguration() {
     return array(
       self::CONFIG_AUX_PHID => true,
       self::CONFIG_SERIALIZATION => array(
@@ -52,19 +54,28 @@ final class PhabricatorPolicy
       return PhabricatorPolicyQuery::getGlobalPolicy($policy_identifier);
     }
 
+    $policy = PhabricatorPolicyQuery::getObjectPolicy($policy_identifier);
+    if ($policy) {
+      return $policy;
+    }
+
     if (!$handle) {
       throw new Exception(
-        "Policy identifier is an object PHID ('{$policy_identifier}'), but no ".
-        "object handle was provided. A handle must be provided for object ".
-        "policies.");
+        pht(
+          "Policy identifier is an object PHID ('%s'), but no object handle ".
+          "was provided. A handle must be provided for object policies.",
+          $policy_identifier));
     }
 
     $handle_phid = $handle->getPHID();
     if ($policy_identifier != $handle_phid) {
       throw new Exception(
-        "Policy identifier is an object PHID ('{$policy_identifier}'), but ".
-        "the provided handle has a different PHID ('{$handle_phid}'). The ".
-        "handle must correspond to the policy identifier.");
+        pht(
+          "Policy identifier is an object PHID ('%s'), but the provided ".
+          "handle has a different PHID ('%s'). The handle must correspond ".
+          "to the policy identifier.",
+          $policy_identifier,
+          $handle_phid));
     }
 
     $policy = id(new PhabricatorPolicy())
@@ -152,7 +163,16 @@ final class PhabricatorPolicy
     return $this->workflow;
   }
 
+  public function setIcon($icon) {
+    $this->icon = $icon;
+    return $this;
+  }
+
   public function getIcon() {
+    if ($this->icon) {
+      return $this->icon;
+    }
+
     switch ($this->getType()) {
       case PhabricatorPolicyType::TYPE_GLOBAL:
         static $map = array(
@@ -197,6 +217,11 @@ final class PhabricatorPolicy
   public static function getPolicyExplanation(
     PhabricatorUser $viewer,
     $policy) {
+
+    $rule = PhabricatorPolicyQuery::getObjectPolicyRule($policy);
+    if ($rule) {
+      return $rule->getPolicyExplanation();
+    }
 
     switch ($policy) {
       case PhabricatorPolicies::POLICY_PUBLIC:
@@ -360,5 +385,16 @@ final class PhabricatorPolicy
   public function describeAutomaticCapability($capability) {
     return null;
   }
+
+
+/* -(  PhabricatorDestructibleInterface  )----------------------------------- */
+
+
+  public function destroyObjectPermanently(
+    PhabricatorDestructionEngine $engine) {
+
+    $this->delete();
+  }
+
 
 }

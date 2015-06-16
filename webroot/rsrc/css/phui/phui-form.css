@@ -24,7 +24,7 @@ div.jx-tokenizer-container {
   line-height: 18px;
   color: #333;
   vertical-align: middle;
-  font: 13px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font: {$basefont};
   -webkit-font-smoothing: antialiased;
 }
 
@@ -140,7 +140,7 @@ textarea::-webkit-input-placeholder {
   color: {$lightgreytext};
 }
 
-select[disabled="disabled"],
-input[disabled="disabled"] {
+select[disabled],
+input[disabled] {
   opacity: 0.5;
 }

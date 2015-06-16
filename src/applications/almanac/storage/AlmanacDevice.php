@@ -29,7 +29,7 @@ final class AlmanacDevice
       ->setIsLocked(0);
   }
 
-  public function getConfiguration() {
+  protected function getConfiguration() {
     return array(
       self::CONFIG_AUX_PHID => true,
       self::CONFIG_COLUMN_SCHEMA => array(
@@ -240,7 +240,7 @@ final class AlmanacDevice
     PhabricatorDestructionEngine $engine) {
 
     $interfaces = id(new AlmanacInterfaceQuery())
-      ->setViewer(PhabricatorUser::getOmnipotentUser())
+      ->setViewer($engine->getViewer())
       ->withDevicePHIDs(array($this->getPHID()))
       ->execute();
     foreach ($interfaces as $interface) {

@@ -10,6 +10,10 @@ final class ReleephRequestSearchEngine
     return pht('Releeph Pull Requests');
   }
 
+  public function getApplicationClassName() {
+    return 'PhabricatorReleephApplication';
+  }
+
   public function setBranch(ReleephBranch $branch) {
     $this->branch = $branch;
     return $this;
@@ -63,11 +67,7 @@ final class ReleephRequestSearchEngine
     AphrontFormView $form,
     PhabricatorSavedQuery $saved_query) {
 
-    $phids = $saved_query->getParameter('requestorPHIDs', array());
-    $requestor_handles = id(new PhabricatorHandleQuery())
-      ->setViewer($this->requireViewer())
-      ->withPHIDs($phids)
-      ->execute();
+    $requestor_phids = $saved_query->getParameter('requestorPHIDs', array());
 
     $form
       ->appendChild(
@@ -82,12 +82,12 @@ final class ReleephRequestSearchEngine
           ->setLabel(pht('Severity'))
           ->setValue($saved_query->getParameter('severity'))
           ->setOptions($this->getSeverityOptions()))
-      ->appendChild(
+      ->appendControl(
         id(new AphrontFormTokenizerControl())
           ->setDatasource(new PhabricatorPeopleDatasource())
           ->setName('requestors')
           ->setLabel(pht('Requestors'))
-          ->setValue($requestor_handles));
+          ->setValue($requestor_phids));
   }
 
   protected function getURI($path) {
@@ -157,11 +157,11 @@ final class ReleephRequestSearchEngine
     if (ReleephDefaultFieldSelector::isFacebook()) {
       return array(
         '' => pht('(All Severities)'),
-        11 => 'HOTFIX',
-        12 => 'PIGGYBACK',
-        13 => 'RELEASE',
-        14 => 'DAILY',
-        15 => 'PARKING',
+        11 => pht('HOTFIX'),
+        12 => pht('PIGGYBACK'),
+        13 => pht('RELEASE'),
+        14 => pht('DAILY'),
+        15 => pht('PARKING'),
       );
     } else {
       return array(

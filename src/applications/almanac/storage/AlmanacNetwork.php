@@ -18,7 +18,7 @@ final class AlmanacNetwork
       ->setEditPolicy(PhabricatorPolicies::POLICY_ADMIN);
   }
 
-  public function getConfiguration() {
+  protected function getConfiguration() {
     return array(
       self::CONFIG_AUX_PHID => true,
       self::CONFIG_COLUMN_SCHEMA => array(
@@ -103,7 +103,7 @@ final class AlmanacNetwork
     PhabricatorDestructionEngine $engine) {
 
     $interfaces = id(new AlmanacInterfaceQuery())
-      ->setViewer(PhabricatorUser::getOmnipotentUser())
+      ->setViewer($engine->getViewer())
       ->withNetworkPHIDs(array($this->getPHID()))
       ->execute();
 

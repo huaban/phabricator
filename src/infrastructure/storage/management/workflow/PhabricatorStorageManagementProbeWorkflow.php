@@ -3,11 +3,11 @@
 final class PhabricatorStorageManagementProbeWorkflow
   extends PhabricatorStorageManagementWorkflow {
 
-  public function didConstruct() {
+  protected function didConstruct() {
     $this
       ->setName('probe')
       ->setExamples('**probe**')
-      ->setSynopsis('Show approximate table sizes.');
+      ->setSynopsis(pht('Show approximate table sizes.'));
   }
 
   public function execute(PhutilArgumentParser $args) {

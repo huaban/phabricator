@@ -34,7 +34,7 @@ final class PhabricatorConduitTokenQuery
     return $this;
   }
 
-  public function loadPage() {
+  protected function loadPage() {
     $table = new PhabricatorConduitToken();
     $conn_r = $table->establishConnection('r');
 
@@ -46,10 +46,10 @@ final class PhabricatorConduitTokenQuery
       $this->buildOrderClause($conn_r),
       $this->buildLimitClause($conn_r));
 
-    return $table->loadAllFromArray($data);;
+    return $table->loadAllFromArray($data);
   }
 
-  private function buildWhereClause(AphrontDatabaseConnection $conn_r) {
+  protected function buildWhereClause(AphrontDatabaseConnection $conn_r) {
     $where = array();
 
     if ($this->ids !== null) {

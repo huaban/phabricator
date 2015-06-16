@@ -30,6 +30,7 @@ final class DiffusionRepositoryEditMainController
 
     $has_branches = ($is_git || $is_hg);
     $has_local = $repository->usesLocalWorkingCopy();
+    $supports_staging = $repository->supportsStaging();
 
     $crumbs = $this->buildApplicationCrumbs($is_main = true);
 
@@ -62,6 +63,10 @@ final class DiffusionRepositoryEditMainController
     $encoding_properties =
       $this->buildEncodingProperties($repository, $encoding_actions);
 
+    $symbols_actions = $this->buildSymbolsActions($repository);
+    $symbols_properties =
+      $this->buildSymbolsProperties($repository, $symbols_actions);
+
     $hosting_properties = $this->buildHostingProperties(
       $repository,
       $this->buildHostingActions($repository));
@@ -86,6 +91,13 @@ final class DiffusionRepositoryEditMainController
       $storage_properties = $this->buildStorageProperties(
         $repository,
         $this->buildStorageActions($repository));
+    }
+
+    $staging_properties = null;
+    if ($supports_staging) {
+      $staging_properties = $this->buildStagingProperties(
+        $repository,
+        $this->buildStagingActions($repository));
     }
 
     $actions_properties = $this->buildActionsProperties(
@@ -126,7 +138,15 @@ final class DiffusionRepositoryEditMainController
 
       $boxes[] = id(new PhabricatorAnchorView())->setAnchorName('mirrors');
 
+      $mirror_info = array();
+      if (PhabricatorEnv::getEnvConfig('phabricator.silent')) {
+        $mirror_info[] = pht(
+          'Phabricator is running in silent mode, so changes will not '.
+          'be pushed to mirrors.');
+      }
+
       $boxes[] = id(new PHUIObjectBoxView())
+        ->setFormErrors($mirror_info)
         ->setHeaderText(pht('Mirrors'))
         ->addPropertyList($mirror_properties);
 
@@ -145,9 +165,19 @@ final class DiffusionRepositoryEditMainController
         ->addPropertyList($storage_properties);
     }
 
+    if ($staging_properties) {
+      $boxes[] = id(new PHUIObjectBoxView())
+        ->setHeaderText(pht('Staging'))
+        ->addPropertyList($staging_properties);
+    }
+
     $boxes[] = id(new PHUIObjectBoxView())
       ->setHeaderText(pht('Text Encoding'))
       ->addPropertyList($encoding_properties);
+
+    $boxes[] = id(new PHUIObjectBoxView())
+      ->setHeaderText(pht('Symbols'))
+      ->addPropertyList($symbols_properties);
 
     if ($branches_properties) {
       $boxes[] = id(new PHUIObjectBoxView())
@@ -257,8 +287,7 @@ final class DiffusionRepositoryEditMainController
       $repository->getPHID(),
       PhabricatorProjectObjectHasProjectEdgeType::EDGECONST);
     if ($project_phids) {
-      $this->loadHandles($project_phids);
-      $project_text = $this->renderHandlesForPHIDs($project_phids);
+      $project_text = $viewer->renderHandleList($project_phids);
     } else {
       $project_text = phutil_tag('em', array(), pht('None'));
     }
@@ -538,10 +567,9 @@ final class DiffusionRepositoryEditMainController
 
     $credential_phid = $repository->getCredentialPHID();
     if ($credential_phid) {
-      $this->loadHandles(array($credential_phid));
       $view->addProperty(
         pht('Credential'),
-        $this->getHandle($credential_phid)->renderLink());
+        $viewer->renderHandle($credential_phid));
     }
 
     return $view;
@@ -576,8 +604,7 @@ final class DiffusionRepositoryEditMainController
 
     $service_phid = $repository->getAlmanacServicePHID();
     if ($service_phid) {
-      $handles = $this->loadViewerHandles(array($service_phid));
-      $v_service = $handles[$service_phid]->renderLink();
+      $v_service = $viewer->renderHandle($service_phid);
     } else {
       $v_service = phutil_tag(
         'em',
@@ -592,6 +619,45 @@ final class DiffusionRepositoryEditMainController
     $view->addProperty(
       pht('Storage Path'),
       $repository->getHumanReadableDetail('local-path'));
+
+    return $view;
+  }
+
+
+  private function buildStagingActions(PhabricatorRepository $repository) {
+    $viewer = $this->getViewer();
+
+    $view = id(new PhabricatorActionListView())
+      ->setObjectURI($this->getRequest()->getRequestURI())
+      ->setUser($viewer);
+
+    $edit = id(new PhabricatorActionView())
+      ->setIcon('fa-pencil')
+      ->setName(pht('Edit Staging'))
+      ->setHref(
+        $this->getRepositoryControllerURI($repository, 'edit/staging/'));
+    $view->addAction($edit);
+
+    return $view;
+  }
+
+  private function buildStagingProperties(
+    PhabricatorRepository $repository,
+    PhabricatorActionListView $actions) {
+    $viewer = $this->getViewer();
+
+    $view = id(new PHUIPropertyListView())
+      ->setUser($viewer)
+      ->setActionList($actions);
+
+    $staging_uri = $repository->getStagingURI();
+    if (!$staging_uri) {
+      $staging_uri = phutil_tag('em', array(), pht('No Staging Area'));
+    }
+
+    $view->addProperty(
+      pht('Staging Area'),
+      $staging_uri);
 
     return $view;
   }
@@ -806,8 +872,9 @@ final class DiffusionRepositoryEditMainController
               ->setTarget(
                 pht('Missing Binary %s', phutil_tag('tt', array(), $binary)))
               ->setNote(pht(
-                  'Unable to find this binary in `environment.append-paths`. '.
+                  'Unable to find this binary in `%s`. '.
                   'You need to configure %s and include %s.',
+                  'environment.append-paths',
                   $this->getEnvConfigLink(),
                   $path)));
           }
@@ -963,11 +1030,34 @@ final class DiffusionRepositoryEditMainController
     if ($message) {
       switch ($message->getStatusCode()) {
         case PhabricatorRepositoryStatusMessage::CODE_ERROR:
+          $message = $message->getParameter('message');
+
+          $suggestion = null;
+          if (preg_match('/Permission denied \(publickey\)./', $message)) {
+            $suggestion = pht(
+              'Public Key Error: This error usually indicates that the '.
+              'keypair you have configured does not have permission to '.
+              'access the repository.');
+          }
+
+          $message = phutil_escape_html_newlines($message);
+
+          if ($suggestion !== null) {
+            $message = array(
+              phutil_tag('strong', array(), $suggestion),
+              phutil_tag('br'),
+              phutil_tag('br'),
+              phutil_tag('em', array(), pht('Raw Error')),
+              phutil_tag('br'),
+              $message,
+            );
+          }
+
           $view->addItem(
             id(new PHUIStatusItemView())
               ->setIcon(PHUIStatusItemView::ICON_WARNING, 'red')
               ->setTarget(pht('Update Error'))
-              ->setNote($message->getParameter('message')));
+              ->setNote($message));
           return $view;
         case PhabricatorRepositoryStatusMessage::CODE_OKAY:
           $ago = (PhabricatorTime::getNow() - $message->getEpoch());
@@ -1157,6 +1247,53 @@ final class DiffusionRepositoryEditMainController
     }
 
     return $mirror_list;
+  }
+
+  private function buildSymbolsActions(PhabricatorRepository $repository) {
+    $viewer = $this->getRequest()->getUser();
+
+    $view = id(new PhabricatorActionListView())
+      ->setObjectURI($this->getRequest()->getRequestURI())
+      ->setUser($viewer);
+
+    $edit = id(new PhabricatorActionView())
+      ->setIcon('fa-pencil')
+      ->setName(pht('Edit Symbols'))
+      ->setHref(
+        $this->getRepositoryControllerURI($repository, 'edit/symbol/'));
+    $view->addAction($edit);
+
+    return $view;
+  }
+
+  private function buildSymbolsProperties(
+    PhabricatorRepository $repository,
+    PhabricatorActionListView $actions) {
+
+    $viewer = $this->getRequest()->getUser();
+
+    $view = id(new PHUIPropertyListView())
+      ->setUser($viewer)
+      ->setActionList($actions);
+
+    $languages = $repository->getSymbolLanguages();
+
+    if ($languages) {
+      $languages = implode(', ', $languages);
+    } else {
+      $languages = phutil_tag('em', array(), pht('Any'));
+    }
+    $view->addProperty(pht('Languages'), $languages);
+
+    $sources = $repository->getSymbolSources();
+    if ($sources) {
+      $handles = $viewer->loadHandles($sources);
+      $sources = $handles->renderList();
+    } else {
+      $sources = phutil_tag('em', array(), pht('This Repository Only'));
+    }
+    $view->addProperty(pht('Use Symbols From'), $sources);
+    return $view;
   }
 
   private function getEnvConfigLink() {

@@ -1,6 +1,6 @@
 <?php
 
-final class ProjectBoardTaskCard {
+final class ProjectBoardTaskCard extends Phobject {
 
   private $viewer;
   private $task;
@@ -98,6 +98,8 @@ final class ProjectBoardTaskCard {
     }
 
     $card = id(new PHUIObjectItemView())
+      ->setObject($task)
+      ->setUser($this->getViewer())
       ->setObjectName('T'.$task->getID())
       ->setHeader($task->getTitle())
       ->setImageURI($imageURI)

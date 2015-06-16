@@ -34,7 +34,6 @@ final class PhabricatorMacroViewController
     $actions = $this->buildActionView($macro);
 
     $crumbs = $this->buildApplicationCrumbs();
-    $crumbs->setActionList($actions);
     $crumbs->addTextCrumb(
       $title_short,
       $this->getApplicationURI('/view/'.$macro->getID().'/'));
@@ -151,6 +150,7 @@ final class PhabricatorMacroViewController
   private function buildPropertyView(
     PhabricatorFileImageMacro $macro,
     PhabricatorActionListView $actions) {
+    $viewer = $this->getViewer();
 
     $view = id(new PHUIPropertyListView())
       ->setUser($this->getRequest()->getUser())
@@ -168,10 +168,9 @@ final class PhabricatorMacroViewController
 
     $audio_phid = $macro->getAudioPHID();
     if ($audio_phid) {
-      $this->loadHandles(array($audio_phid));
       $view->addProperty(
         pht('Audio'),
-        $this->getHandle($audio_phid)->renderLink());
+        $viewer->renderHandle($audio_phid));
     }
 
     $view->invokeWillRenderEvent();

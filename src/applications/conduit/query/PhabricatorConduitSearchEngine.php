@@ -7,7 +7,7 @@ final class PhabricatorConduitSearchEngine
     return pht('Conduit Methods');
   }
 
-  protected function getApplicationClassName() {
+  public function getApplicationClassName() {
     return 'PhabricatorConduitApplication';
   }
 
@@ -58,7 +58,7 @@ final class PhabricatorConduitSearchEngine
     $form
       ->appendChild(
         id(new AphrontFormTextControl())
-          ->setLabel('Name Contains')
+          ->setLabel(pht('Name Contains'))
           ->setName('nameContains')
           ->setValue($saved->getParameter('nameContains')));
 
@@ -66,12 +66,13 @@ final class PhabricatorConduitSearchEngine
     $form
       ->appendChild(
         id(new AphrontFormTextControl())
-          ->setLabel('Applications')
+          ->setLabel(pht('Applications'))
           ->setName('applicationNames')
           ->setValue(implode(', ', $names))
-          ->setCaption(pht(
-            'Example: %s',
-            phutil_tag('tt', array(), 'differential, paste'))));
+          ->setCaption(
+            pht(
+              'Example: %s',
+              phutil_tag('tt', array(), 'differential, paste'))));
 
     $is_stable = $saved->getParameter('isStable');
     $is_unstable = $saved->getParameter('isUnstable');

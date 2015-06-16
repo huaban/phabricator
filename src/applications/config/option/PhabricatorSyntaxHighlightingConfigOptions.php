@@ -11,6 +11,14 @@ final class PhabricatorSyntaxHighlightingConfigOptions
     return pht('Options relating to syntax highlighting source code.');
   }
 
+  public function getFontIcon() {
+    return 'fa-code';
+  }
+
+  public function getGroup() {
+    return 'core';
+  }
+
   public function getOptions() {
 
     $caches_href = PhabricatorEnv::getDocLink('Managing Caches');
@@ -26,8 +34,8 @@ final class PhabricatorSyntaxHighlightingConfigOptions
           pht(
             'Phabricator can highlight PHP by default and use Pygments for '.
             'other languages if enabled. You can provide a custom '.
-            'highlighter engine by extending class '.
-            'PhutilSyntaxHighlighterEngine.')),
+            'highlighter engine by extending class %s.',
+            'PhutilSyntaxHighlighterEngine')),
       $this->newOption('pygments.enabled', 'bool', false)
         ->setSummary(
           pht('Should Phabricator use Pygments to highlight code?'))
@@ -120,7 +128,7 @@ final class PhabricatorSyntaxHighlightingConfigOptions
             'be tested against the filename. They should map to either an '.
             'explicit language as a string value, or a numeric index into '.
             'the captured groups as an integer.'))
-      ->addExample('{"@\\.xyz$@": "php"}', pht('Highlight *.xyz as PHP.'))
+      ->addExample('{"@\\.xyz$@": "php"}', pht('Highlight %s as PHP.', '*.xyz'))
       ->addExample(
         '{"@/httpd\\.conf@": "apacheconf"}',
         pht('Highlight httpd.conf as "apacheconf".'))
@@ -129,28 +137,6 @@ final class PhabricatorSyntaxHighlightingConfigOptions
         pht(
           "Treat all '*.x.bak' file as '.x'. NOTE: We map to capturing group ".
           "1 by specifying the mapping as '1'")),
-      $this->newOption(
-        'style.monospace',
-        'string',
-        '10px "Menlo", "Consolas", "Monaco", monospace')
-        ->setLocked(true)
-        ->setSummary(
-          pht('Default monospace font.'))
-        ->setDescription(
-          pht(
-            "Set the default monospaced font style for users who haven't set ".
-            "a custom style.")),
-      $this->newOption(
-        'style.monospace.windows',
-        'string',
-        '11px "Menlo", "Consolas", "Monaco", monospace')
-        ->setLocked(true)
-        ->setSummary(
-          pht('Default monospace font for clients on Windows.'))
-        ->setDescription(
-          pht(
-            "Set the default monospaced font style for users who haven't set ".
-            "a custom style and are using Windows.")),
     );
   }
 

@@ -19,16 +19,19 @@ final class HarbormasterBuildPlan extends HarbormasterDAO
       ->setPlanStatus(self::STATUS_ACTIVE);
   }
 
-  public function getConfiguration() {
+  protected function getConfiguration() {
     return array(
       self::CONFIG_AUX_PHID => true,
       self::CONFIG_COLUMN_SCHEMA => array(
-        'name' => 'text255',
+        'name' => 'sort128',
         'planStatus' => 'text32',
       ),
       self::CONFIG_KEY_SCHEMA => array(
         'key_status' => array(
           'columns' => array('planStatus'),
+        ),
+        'key_name' => array(
+          'columns' => array('name'),
         ),
       ),
     ) + parent::getConfiguration();

@@ -10,12 +10,12 @@ final class ConpherenceQueryTransactionConduitAPIMethod
   public function getMethodDescription() {
     return pht(
       'Query for transactions for the logged in user within a specific '.
-      'conpherence thread. You can specify the thread by id or phid. '.
+      'Conpherence thread. You can specify the thread by ID or PHID. '.
       'Otherwise, specify limit and offset to query the most recent '.
-      'transactions within the conpherence for the logged in user.');
+      'transactions within the Conpherence for the logged in user.');
   }
 
-  public function defineParamTypes() {
+  protected function defineParamTypes() {
     return array(
       'threadID' => 'optional int',
       'threadPHID' => 'optional phid',
@@ -24,14 +24,14 @@ final class ConpherenceQueryTransactionConduitAPIMethod
     );
   }
 
-  public function defineReturnType() {
+  protected function defineReturnType() {
     return 'nonempty dict';
   }
 
-  public function defineErrorTypes() {
+  protected function defineErrorTypes() {
     return array(
       'ERR_USAGE_NO_THREAD_ID' => pht(
-        'You must specify a thread id or thread phid to query transactions '.
+        'You must specify a thread id or thread PHID to query transactions '.
         'from.'),
     );
   }

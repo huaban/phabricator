@@ -7,7 +7,7 @@ final class PhabricatorFlagSearchEngine
     return pht('Flags');
   }
 
-  protected function getApplicationClassName() {
+  public function getApplicationClassName() {
     return 'PhabricatorFlagsApplication';
   }
 
@@ -151,6 +151,11 @@ final class PhabricatorFlagSearchEngine
         ->addHeadIcon($flag_icon)
         ->setHeader($flag->getHandle()->getFullName())
         ->setHref($flag->getHandle()->getURI());
+
+      $status_open = PhabricatorObjectHandle::STATUS_OPEN;
+      if ($flag->getHandle()->getStatus() != $status_open) {
+        $item->setDisabled(true);
+      }
 
       $item->addAction(
         id(new PHUIListItemView())

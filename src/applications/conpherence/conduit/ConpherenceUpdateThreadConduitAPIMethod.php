@@ -11,7 +11,7 @@ final class ConpherenceUpdateThreadConduitAPIMethod
     return pht('Update an existing conpherence thread.');
   }
 
-  public function defineParamTypes() {
+  protected function defineParamTypes() {
     return array(
       'id' => 'optional int',
       'phid' => 'optional phid',
@@ -22,11 +22,11 @@ final class ConpherenceUpdateThreadConduitAPIMethod
     );
   }
 
-  public function defineReturnType() {
+  protected function defineReturnType() {
     return 'bool';
   }
 
-  public function defineErrorTypes() {
+  protected function defineErrorTypes() {
     return array(
       'ERR_USAGE_NO_THREAD_ID' => pht(
         'You must specify a thread id or thread phid to query transactions '.
@@ -71,7 +71,7 @@ final class ConpherenceUpdateThreadConduitAPIMethod
     if ($add_participant_phids) {
       $xactions[] = id(new ConpherenceTransaction())
         ->setTransactionType(
-          ConpherenceTransactionType::TYPE_PARTICIPANTS)
+          ConpherenceTransaction::TYPE_PARTICIPANTS)
         ->setNewValue(array('+' => $add_participant_phids));
     }
     if ($remove_participant_phid) {
@@ -80,12 +80,12 @@ final class ConpherenceUpdateThreadConduitAPIMethod
       }
       $xactions[] = id(new ConpherenceTransaction())
         ->setTransactionType(
-          ConpherenceTransactionType::TYPE_PARTICIPANTS)
+          ConpherenceTransaction::TYPE_PARTICIPANTS)
         ->setNewValue(array('-' => array($remove_participant_phid)));
     }
     if ($title) {
       $xactions[] = id(new ConpherenceTransaction())
-        ->setTransactionType(ConpherenceTransactionType::TYPE_TITLE)
+        ->setTransactionType(ConpherenceTransaction::TYPE_TITLE)
         ->setNewValue($title);
     }
     if ($message) {

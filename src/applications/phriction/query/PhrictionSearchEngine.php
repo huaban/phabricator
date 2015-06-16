@@ -7,11 +7,15 @@ final class PhrictionSearchEngine
     return pht('Wiki Documents');
   }
 
+  public function getApplicationClassName() {
+    return 'PhabricatorPhrictionApplication';
+  }
+
   public function buildSavedQueryFromRequest(AphrontRequest $request) {
     $saved = new PhabricatorSavedQuery();
 
-    $saved->setParameter('status', $request->getArr('status'));
-    $saved->setParameter('order', $request->getArr('order'));
+    $saved->setParameter('status', $request->getStr('status'));
+    $saved->setParameter('order', $request->getStr('order'));
 
     return $saved;
   }
